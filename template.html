@@ -1040,7 +1040,7 @@
       }).formatToParts(now);
 
       const get = (type) => (parts.find((p) => p.type === type) || {}).value || '00';
-      return `Updated: ${get('day')}.${get('month')}.${get('year')}, ${get('hour')}:${get('minute')}`;
+      return `Updated: ${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}`;
     }
 
     function summarizeHourlySlice(hoursSlice, fallbackTemp, periodSuffix, activeCurrentHour = null) {

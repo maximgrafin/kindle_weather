@@ -150,3 +150,4 @@ vite.config.ts.timestamp-*
 
 # Generated weather widget screenshot (deployed to gh-pages)
 weather.png
+package-lock.json
