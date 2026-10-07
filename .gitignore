@@ -147,3 +147,6 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Generated weather widget screenshot (deployed to gh-pages)
+weather.png

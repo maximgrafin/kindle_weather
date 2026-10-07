@@ -1,0 +1,17 @@
+{
+  "name": "kindle-paperwhite2-weather-widget",
+  "version": "1.0.0",
+  "description": "Landscape E-Ink weather widget (1024x758) for Kindle Paperwhite 2 (DP75SDI) powered by Open-Meteo and Puppeteer",
+  "main": "render.js",
+  "scripts": {
+    "start": "node render.js",
+    "render": "node render.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "puppeteer": "^24.0.0"
+  },
+  "license": "MIT"
+}

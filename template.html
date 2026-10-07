@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1024, height=758, initial-scale=1.0" />
+  <title>Kindle E-Ink Weather Widget</title>
+  <meta name="description" content="Monochrome Material You weather dashboard for Kindle Paperwhite 2 (1024x758)" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700;900&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg-page: #ffffff;
+      --bg-card: #f1f3f4;
+      --bg-pill: #ffffff;
+      --ink-black: #000000;
+      --ink-dark: #222222;
+      --ink-muted: #444444;
+      --ink-footer: #777777;
+      --border-strong: 2px solid #000000;
+      --border-thin: 1.5px solid #000000;
+      --radius-hero: 30px;
+      --radius-card: 24px;
+      --radius-pill: 999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 1024px;
+      height: 758px;
+      overflow: hidden;
+      background-color: var(--bg-page);
+      color: var(--ink-black);
+      font-family: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    .screen {
+      width: 1024px;
+      height: 758px;
+      padding: 24px 28px 10px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Main Two-Column Grid: Compact Hero Left (380px) + Wide Chart/Forecast Right (566px) */
+    .dashboard-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 22px;
+      min-height: 0;
+    }
+
+    /* Left Column: Hero Card */
+    .hero-card {
+      background-color: var(--bg-card);
+      border: var(--border-strong);
+      border-radius: var(--radius-hero);
+      padding: 26px 24px 22px 24px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .hero-header {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .current-date {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink-black);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .day-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 2px;
+    }
+
+    .day-badges:empty {
+      display: none;
+    }
+
+    .event-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 22px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 0 8px;
+      border-radius: var(--radius-pill);
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .hero-header .event-badge {
+      height: 31px;
+      font-size: 14.5px;
+      padding: 0 14px;
+      letter-spacing: 0.05em;
+      gap: 6px;
+    }
+
+    .event-badge .badge-icon {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+      display: block;
+    }
+
+    .hero-header .event-badge .badge-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* High-alert solid black badge for weekday Kita closures & public holidays */
+    .event-badge-kita {
+      background-color: #000000;
+      color: #ffffff;
+      border: 1.8px solid #000000;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* Routine weekend Kita closures & Sunday/Holiday No Shops share identical grey pill style */
+    .event-badge-kita-weekend,
+    .event-badge-shops {
+      background-color: #dcdfe4;
+      color: #000000;
+      border: 1.8px solid #000000;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .event-badge-holiday {
+      background-color: #ffffff;
+      color: #000000;
+      border: 1.8px solid #000000;
+    }
+
+    /* Hero Main Condition & Temperature */
+    .hero-main {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .hero-temp-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .hero-icon-wrap {
+      width: 118px;
+      height: 118px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-icon-wrap svg {
+      width: 118px;
+      height: 118px;
+      display: block;
+    }
+
+    .hero-temp {
+      font-size: 94px;
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      line-height: 0.92;
+      color: var(--ink-black);
+    }
+
+    .hero-status-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .hero-condition {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--ink-black);
+    }
+
+    .hero-hilow {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--ink-dark);
+    }
+
+    /* Hero Bottom Metrics */
+    .hero-metrics {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .metric-box {
+      background-color: var(--bg-pill);
+      border: var(--border-thin);
+      border-radius: 18px;
+      padding: 11px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .metric-box-wide {
+      grid-column: 1 / -1;
+      padding: 12px 16px;
+    }
+
+    .metric-box-full {
+      grid-column: 1 / -1;
+    }
+
+    .metric-icon {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .metric-icon svg {
+      width: 25px;
+      height: 25px;
+    }
+
+    .metric-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .metric-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-muted);
+    }
+
+    .metric-value {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+      color: var(--ink-black);
+      white-space: nowrap;
+    }
+
+    .metric-denom {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      letter-spacing: 0;
+    }
+
+    .metric-level {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink-dark);
+    }
+
+    .metric-subvalue {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink-dark);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Right Column: 24h Hourly Chart + 3-Day Forecast */
+    .forecast-column {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      height: 100%;
+      min-width: 0;
+    }
+
+    /* Top Right: 24-Hour Precision Meteogram Card */
+    .hourly-chart-card {
+      background-color: var(--bg-card);
+      border: var(--border-strong);
+      border-radius: var(--radius-card);
+      padding: 14px 18px 10px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+
+    .chart-title {
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-black);
+    }
+
+    .chart-legend {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink-dark);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .legend-line {
+      width: 14px;
+      height: 3px;
+      background-color: #000000;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .legend-box-prob {
+      width: 11px;
+      height: 11px;
+      background-color: #cfd4da;
+      border: 1.5px solid #000000;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .legend-box-mm {
+      width: 11px;
+      height: 11px;
+      background-color: #000000;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .chart-svg-wrap {
+      width: 100%;
+      height: 368px;
+    }
+
+    .chart-svg-wrap svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    /* Bottom Right: 3-Day Forecast Cards (compact to give priority to 24h chart) */
+    .daily-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .daily-card {
+      flex: 1;
+      background-color: var(--bg-card);
+      border: var(--border-strong);
+      border-radius: 20px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .daily-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .daily-title-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 6px;
+    }
+
+    .daily-day {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink-black);
+    }
+
+    .daily-sub {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .daily-sub strong {
+      color: var(--ink-black);
+      font-weight: 800;
+    }
+
+    .daily-right {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .daily-right-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .precip-pill {
+      background-color: var(--bg-pill);
+      border: var(--border-thin);
+      border-radius: var(--radius-pill);
+      height: 20px;
+      padding: 0 7.5px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink-black);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .precip-pill svg {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+      display: block;
+    }
+
+    .daily-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .daily-icon svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .daily-temps {
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      gap: 4px;
+      height: 22px;
+      line-height: 1;
+      text-align: right;
+    }
+
+    .temp-max {
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink-black);
+    }
+
+    .temp-sep {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink-muted);
+    }
+
+    .temp-min {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink-muted);
+    }
+
+    /* Subtle Service Footer */
+    .footer-status {
+      height: 18px;
+      margin-top: 8px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--ink-footer);
+      letter-spacing: 0.01em;
+      padding: 0 4px;
+    }
+
+    .footer-sep {
+      color: var(--ink-footer);
+    }
+
+    .footer-signature {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .footer-signature svg {
+      width: 11px;
+      height: 11px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="screen">
+    <main class="dashboard-grid">
+      <!-- Left Column: Current Weather (Hero Card) -->
+      <section class="hero-card" aria-label="Current Weather">
+        <header class="hero-header">
+          <h1 id="current-date" class="current-date">—</h1>
+          <div id="today-badges" class="day-badges"></div>
+        </header>
+
+        <div class="hero-main">
+          <div class="hero-temp-row">
+            <div id="hero-icon" class="hero-icon-wrap" aria-hidden="true"></div>
+            <div id="hero-temp" class="hero-temp">--°</div>
+          </div>
+          <div class="hero-status-block">
+            <div id="hero-condition" class="hero-condition">Loading...</div>
+            <div class="hero-hilow">
+              <span id="hero-feels">Feels like --°</span>
+              <span>·</span>
+              <span id="hero-high">H: --°</span>
+              <span>·</span>
+              <span id="hero-low">L: --°</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-metrics">
+          <div class="metric-box metric-box-wide">
+            <div id="hero-precip-icon" class="metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#f1f3f4" />
+                <path d="M12 12v7a2 2 0 0 0 4 0" />
+                <path d="M12 2v1" />
+              </svg>
+            </div>
+            <div class="metric-info">
+              <span id="hero-precip-label" class="metric-label">Rain Today</span>
+              <span id="hero-precip-prob" class="metric-value">--%</span>
+              <span id="hero-precip-time" class="metric-subvalue">Loading...</span>
+            </div>
+          </div>
+
+          <div id="hero-uv-box" class="metric-box metric-box-full">
+            <div class="metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4.5" fill="#f1f3f4" />
+                <line x1="12" y1="2" x2="12" y2="4.5" />
+                <line x1="12" y1="19.5" x2="12" y2="22" />
+                <line x1="4.93" y1="4.93" x2="6.7" y2="6.7" />
+                <line x1="17.3" y1="17.3" x2="19.07" y2="19.07" />
+                <line x1="2" y1="12" x2="4.5" y2="12" />
+                <line x1="19.5" y1="12" x2="22" y2="12" />
+                <line x1="4.93" y1="19.07" x2="6.7" y2="17.3" />
+                <line x1="17.3" y1="6.7" x2="19.07" y2="4.93" />
+              </svg>
+            </div>
+            <div class="metric-info">
+              <span id="hero-uv-label" class="metric-label">UV Index</span>
+              <span id="hero-uv" class="metric-value">--</span>
+            </div>
+          </div>
+
+          <div id="hero-wind-box" class="metric-box" style="display: none;">
+            <div class="metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path
+                  d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" />
+              </svg>
+            </div>
+            <div class="metric-info">
+              <span id="hero-wind-label" class="metric-label">Strong Wind</span>
+              <span id="hero-wind" class="metric-value">-- kn</span>
+            </div>
+          </div>
+
+          <div class="metric-box">
+            <div class="metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M17 18a5 5 0 0 0-10 0" fill="#f1f3f4" />
+                <line x1="12" y1="2" x2="12" y2="9" />
+                <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" />
+                <line x1="1" y1="18" x2="3" y2="18" />
+                <line x1="21" y1="18" x2="23" y2="18" />
+                <line x1="18.36" y1="11.64" x2="19.78" y2="10.22" />
+                <line x1="23" y1="22" x2="1" y2="22" />
+                <polyline points="8 6 12 2 16 6" />
+              </svg>
+            </div>
+            <div class="metric-info">
+              <span class="metric-label">Sunrise</span>
+              <span id="hero-sunrise" class="metric-value">--:--</span>
+            </div>
+          </div>
+
+          <div class="metric-box">
+            <div class="metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M17 18a5 5 0 0 0-10 0" fill="#dadce0" />
+                <line x1="12" y1="9" x2="12" y2="2" />
+                <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" />
+                <line x1="1" y1="18" x2="3" y2="18" />
+                <line x1="21" y1="18" x2="23" y2="18" />
+                <line x1="18.36" y1="11.64" x2="19.78" y2="10.22" />
+                <line x1="23" y1="22" x2="1" y2="22" />
+                <polyline points="16 5 12 9 8 5" />
+              </svg>
+            </div>
+            <div class="metric-info">
+              <span class="metric-label">Sunset</span>
+              <span id="hero-sunset" class="metric-value">--:--</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: 24h Hourly Chart + 3-Day Forecast -->
+      <section class="forecast-column" aria-label="Weather Forecast">
+        <!-- Top Part: 24-Hour Precision Temperature & Precipitation Chart -->
+        <div class="hourly-chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Next 24 Hours</span>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-line"></span>Temp</span>
+              <span class="legend-item"><span class="legend-box-prob"></span>Chance %</span>
+              <span class="legend-item"><span class="legend-box-mm"></span>Rain mm</span>
+            </div>
+          </div>
+          <div id="hourly-chart" class="chart-svg-wrap">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Bottom Part: Next 3 Days Forecast -->
+        <div id="daily-list" class="daily-list">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Footer Status -->
+    <footer class="footer-status">
+      <span id="footer-updated">Updated: --.--.----, --:--</span>
+      <span class="footer-sep" aria-hidden="true">·</span>
+      <span class="footer-signature">
+        made with
+        <svg viewBox="0 0 24 24" fill="#666666" aria-label="love">
+          <path
+            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+        by Maxim Sadym
+      </span>
+    </footer>
+  </div>
+
+  <script>
+    const BASE_API_URL =
+      'https://api.open-meteo.com/v1/forecast' +
+      '?latitude=52.52&longitude=13.405' +
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,is_day' +
+      '&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,snowfall,weather_code,wind_speed_10m,is_day' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,sunrise,sunset,uv_index_max,wind_speed_10m_max' +
+      '&wind_speed_unit=kn' +
+      '&timezone=Europe%2FBerlin';
+
+    const API_URL = `${BASE_API_URL}&forecast_days=5`;
+
+    const KITA_CLOSURES = [
+      { date: '2026-10-07', label: 'Kita Closed' },
+      { date: '2026-10-19', label: 'Kita Closed' },
+      { date: '2026-11-04', label: 'Kita Closed' },
+      { date: '2026-12-03', label: 'Kita Closed' },
+      { date: '2026-12-23', label: 'Kita  Closed' },
+      { start: '2026-12-24', end: '2027-01-03', label: 'Kita Closed' },
+      { start: '2027-02-18', end: '2027-02-19', label: 'Kita Closed' },
+      { start: '2027-04-15', end: '2027-04-16', label: 'Kita Closed' },
+      { start: '2027-05-13', end: '2027-05-14', label: 'Kita Closed' },
+      { date: '2027-06-25', label: 'Kita Closed' },
+      { date: '2027-08-02', label: 'Kita Closed' },
+      { date: '2027-10-04', label: 'Kita Closed' },
+      { start: '2027-11-18', end: '2027-11-19', label: 'Kita Closed' },
+      { start: '2027-12-24', end: '2028-01-02', label: 'Kita Closed' },
+      { start: '2027-03-22', end: '2027-03-25', label: 'Kita Closed' },
+      { date: '2027-05-07', label: 'Kita Closed' },
+      { date: '2027-12-23', label: 'Kita Closed' }
+    ];
+
+    const BERLIN_HOLIDAYS = {
+      '2026-12-25': 'Christmas Day',
+      '2026-12-26': '2nd Christmas Day',
+      '2027-01-01': "New Year's Day",
+      '2027-03-08': "Women's Day",
+      '2027-03-26': 'Good Friday',
+      '2027-03-29': 'Easter Monday',
+      '2027-05-01': 'Labour Day',
+      '2027-05-06': 'Ascension Day',
+      '2027-05-17': 'Whit Monday',
+      '2027-10-03': 'German Unity Day',
+      '2027-12-25': 'Christmas Day',
+      '2027-12-26': '2nd Christmas Day'
+    };
+
+    // Crossed-out Kita backpack (Rucksack) monochrome SVG ("Kita Closed")
+    function renderNoKitaSvg(knockoutBg) {
+      return `<svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6V4.2a3 3 0 0 1 6 0V6"/><rect x="5" y="6" width="14" height="15" rx="4.2"/><path d="M8.5 13.5h7v4.5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-4.5Z"/><line x1="3" y1="3" x2="21" y2="21" stroke="${knockoutBg}" stroke-width="4.6"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.5"/></svg>`;
+    }
+
+    // Crossed-out shopping trolley monochrome SVG for Sundays & Berlin public holidays ("No Shops")
+    const NO_SHOPS_SVG = `<svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.6" fill="currentColor"/><circle cx="17" cy="20" r="1.6" fill="currentColor"/><path d="M2 3h3.2l2.2 11a1.8 1.8 0 0 0 1.8 1.4h8.1a1.8 1.8 0 0 0 1.7-1.3L21 6.5H6"/><line x1="3" y1="3" x2="21" y2="21" stroke="#dcdfe4" stroke-width="4.6"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.5"/></svg>`;
+
+    function getDaySpecialStatus(isoDateStr) {
+      const [year, month, day] = isoDateStr.split('-').map(Number);
+      const dayOfWeek = new Date(Date.UTC(year, month - 1, day, 12, 0, 0)).getUTCDay();
+      const isSunday = dayOfWeek === 0;
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+      const holiday = BERLIN_HOLIDAYS[isoDateStr] || null;
+
+      let kitaClosed = null;
+      let isSpecialKitaClosure = false;
+      for (const entry of KITA_CLOSURES) {
+        if (typeof entry === 'string') {
+          if (entry === isoDateStr) {
+            kitaClosed = 'Kita Closed';
+            isSpecialKitaClosure = true;
+            break;
+          }
+        } else if (entry && typeof entry === 'object') {
+          if (entry.date === isoDateStr) {
+            kitaClosed = entry.label || 'Kita Closed';
+            isSpecialKitaClosure = true;
+            break;
+          }
+          if (entry.start && entry.end && isoDateStr >= entry.start && isoDateStr <= entry.end) {
+            kitaClosed = entry.label || 'Kita Closed';
+            isSpecialKitaClosure = true;
+            break;
+          }
+        }
+      }
+
+      // Kita is also closed on all Berlin statutory public holidays and weekends
+      if ((holiday || isWeekend) && !kitaClosed) {
+        kitaClosed = 'Kita Closed';
+      }
+
+      // Routine weekend (no statutory holiday or special Kita schedule) uses outlined badge
+      const isRoutineWeekendKita = Boolean(isWeekend && !holiday && !isSpecialKitaClosure);
+
+      // In Berlin, shops are closed on Sundays and statutory public holidays
+      const noShops = Boolean(isSunday || holiday);
+
+      return { holiday, kitaClosed, isWeekend, isRoutineWeekendKita, noShops };
+    }
+
+    function renderDayBadges(special, isHero = false) {
+      const badges = [];
+      if (special.kitaClosed) {
+        const kitaClass = special.isRoutineWeekendKita ? 'event-badge-kita-weekend' : 'event-badge-kita';
+        const kitaIcon = renderNoKitaSvg(special.isRoutineWeekendKita ? '#dcdfe4' : '#000000');
+        badges.push(`<span class="event-badge ${kitaClass}">${kitaIcon}<span>${special.kitaClosed}</span></span>`);
+      }
+      if (special.noShops) {
+        badges.push(`<span class="event-badge event-badge-shops">${NO_SHOPS_SVG}<span>No Shops</span></span>`);
+      }
+      if (special.holiday && isHero) {
+        badges.push(`<span class="event-badge event-badge-holiday">Holiday · ${special.holiday}</span>`);
+      }
+      return badges;
+    }
+
+    // Map WMO Weather interpretation codes (WW) to label & icon type
+    function getWeatherInfo(code, isDay = 1) {
+      const day = isDay !== 0;
+      const map = {
+        0: { label: 'Clear sky', icon: day ? 'clear-day' : 'clear-night' },
+        1: { label: 'Mainly clear', icon: day ? 'clear-day' : 'clear-night' },
+        2: { label: 'Partly cloudy', icon: day ? 'partly-cloudy-day' : 'partly-cloudy-night' },
+        3: { label: 'Overcast', icon: 'overcast' },
+        45: { label: 'Foggy', icon: 'fog' },
+        48: { label: 'Rime fog', icon: 'fog' },
+        51: { label: 'Light drizzle', icon: 'drizzle' },
+        53: { label: 'Moderate drizzle', icon: 'drizzle' },
+        55: { label: 'Dense drizzle', icon: 'drizzle' },
+        56: { label: 'Freezing drizzle', icon: 'drizzle' },
+        57: { label: 'Freezing drizzle', icon: 'drizzle' },
+        61: { label: 'Light rain', icon: 'rain' },
+        63: { label: 'Moderate rain', icon: 'rain' },
+        65: { label: 'Heavy rain', icon: 'heavy-rain' },
+        66: { label: 'Freezing rain', icon: 'rain' },
+        67: { label: 'Heavy freezing rain', icon: 'heavy-rain' },
+        71: { label: 'Light snow', icon: 'snow' },
+        73: { label: 'Moderate snow', icon: 'snow' },
+        75: { label: 'Heavy snow', icon: 'snow' },
+        77: { label: 'Snow grains', icon: 'snow' },
+        80: { label: 'Light showers', icon: 'rain' },
+        81: { label: 'Rain showers', icon: 'rain' },
+        82: { label: 'Violent showers', icon: 'heavy-rain' },
+        85: { label: 'Snow showers', icon: 'snow' },
+        86: { label: 'Heavy snow showers', icon: 'snow' },
+        95: { label: 'Thunderstorm', icon: 'thunderstorm' },
+        96: { label: 'Storm with hail', icon: 'thunderstorm' },
+        99: { label: 'Severe hailstorm', icon: 'thunderstorm' }
+      };
+      return map[code] || { label: 'Cloudy', icon: 'overcast' };
+    }
+
+    // Crisp Material-inspired Monochrome Vector Icons optimized for 16-level E-Ink
+    function renderWeatherSvg(type, customAttrs = '') {
+      const common = `viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" ${customAttrs}`;
+      const cloudPath = 'M20 46H46C51.5228 46 56 41.5228 56 36C56 30.7702 51.9844 26.4795 46.8673 26.0369C45.3237 18.6003 38.7366 13 30.8 13C21.7425 13 14.4 20.3425 14.4 29.4C14.4 29.9693 14.429 30.5318 14.4856 31.0858C10.7428 32.1676 8 35.6223 8 39.75C8 44.7206 12.0294 46 17 46H20Z';
+
+      switch (type) {
+        case 'clear-day':
+          return `<svg ${common}>
+            <circle cx="32" cy="32" r="13" fill="#ffffff" stroke="#000000" stroke-width="3.4"/>
+            <g stroke="#000000" stroke-width="3.4" stroke-linecap="round">
+              <line x1="32" y1="6" x2="32" y2="12"/>
+              <line x1="32" y1="52" x2="32" y2="58"/>
+              <line x1="6" y1="32" x2="12" y2="32"/>
+              <line x1="52" y1="32" x2="58" y2="32"/>
+              <line x1="13.6" y1="13.6" x2="17.8" y2="17.8"/>
+              <line x1="46.2" y1="46.2" x2="50.4" y2="50.4"/>
+              <line x1="50.4" y1="13.6" x2="46.2" y2="17.8"/>
+              <line x1="17.8" y1="46.2" x2="13.6" y2="50.4"/>
+            </g>
+          </svg>`;
+
+        case 'clear-night':
+          return `<svg ${common}>
+            <path d="M42.5 14.5C39.2 13.5 35.6 13.7 32.3 15.1C23.5 18.8 19.4 29.0 23.1 37.8C26.8 46.6 37.0 50.7 45.8 47.0C48.3 45.9 50.5 44.3 52.2 42.3C44.9 42.9 37.8 38.6 35.1 31.3C32.4 24.0 35.7 16.0 42.5 14.5Z" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+            <path d="M18 16L19.5 19.5L23 21L19.5 22.5L18 26L16.5 22.5L13 21L16.5 19.5L18 16Z" fill="#000000"/>
+            <path d="M49 14L50 16.5L52.5 17.5L50 18.5L49 21L48 18.5L45.5 17.5L48 16.5L49 14Z" fill="#000000"/>
+          </svg>`;
+
+        case 'partly-cloudy-day':
+          return `<svg ${common}>
+            <g stroke="#000000" stroke-width="3" stroke-linecap="round">
+              <circle cx="22" cy="22" r="9" fill="#ffffff"/>
+              <line x1="22" y1="6" x2="22" y2="9.5"/>
+              <line x1="6" y1="22" x2="9.5" y2="22"/>
+              <line x1="10.7" y1="10.7" x2="13.2" y2="13.2"/>
+              <line x1="33.3" y1="10.7" x2="30.8" y2="13.2"/>
+              <line x1="10.7" y1="33.3" x2="13.2" y2="30.8"/>
+            </g>
+            <path d="M22 50H46C51.5 50 56 45.5 56 40C56 34.8 52 30.6 47 30.1C45.5 22.9 39.1 17.5 31.4 17.5C22.6 17.5 15.5 24.6 15.5 33.4C15.5 33.9 15.5 34.5 15.6 35C11.8 36.1 9 39.5 9 43.6C9 47.8 12.5 50 17 50H22Z" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+          </svg>`;
+
+        case 'partly-cloudy-night':
+          return `<svg ${common}>
+            <path d="M26.5 9.5C23.8 8.8 20.9 9.1 18.3 10.4C11.9 13.5 9.2 21.2 12.3 27.6C14.1 31.3 17.4 33.8 21.2 34.6C17.8 31.4 16.9 26.2 19.1 21.8C21.1 17.8 25.1 15.5 29.5 15.7C28.8 13.2 27.7 11.1 26.5 9.5Z" fill="#dadce0" stroke="#000000" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M44 12L45 14.5L47.5 15.5L45 16.5L44 19L43 16.5L40.5 15.5L43 14.5L44 12Z" fill="#000000"/>
+            <path d="M22 50H46C51.5 50 56 45.5 56 40C56 34.8 52 30.6 47 30.1C45.5 22.9 39.1 17.5 31.4 17.5C22.6 17.5 15.5 24.6 15.5 33.4C15.5 33.9 15.5 34.5 15.6 35C11.8 36.1 9 39.5 9 43.6C9 47.8 12.5 50 17 50H22Z" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+          </svg>`;
+
+        case 'overcast':
+          return `<svg ${common}>
+            <path d="M26 38H49C53.4 38 57 34.4 57 30C57 25.8 53.8 22.4 49.7 22C48.5 16.3 43.4 12 37.3 12C30.3 12 24.6 17.7 24.6 24.7" fill="#dadce0" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 49H44C49.5 49 54 44.5 54 39C54 33.8 50 29.6 45 29.1C43.5 21.9 37.1 16.5 29.4 16.5C20.6 16.5 13.5 23.6 13.5 32.4C13.5 32.9 13.5 33.5 13.6 34C9.8 35.1 7 38.5 7 42.6C7 46.8 10.5 49 15 49H18Z" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+          </svg>`;
+
+        case 'fog':
+          return `<svg ${common}>
+            <path d="M18 39H46C51 39 55 35 55 30C55 25.3 51.4 21.5 46.8 21.1C45.3 14.5 39.4 9.5 32.3 9.5C24.1 9.5 17.5 16.1 17.5 24.3C17.5 24.8 17.5 25.3 17.6 25.8C13.8 26.8 11 30.2 11 34.2C11 37.5 13.8 39 18 39Z" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+            <g stroke="#000000" stroke-width="3.4" stroke-linecap="round">
+              <line x1="14" y1="46" x2="50" y2="46"/>
+              <line x1="18" y1="53" x2="46" y2="53"/>
+            </g>
+          </svg>`;
+
+        case 'drizzle':
+          return `<svg ${common}>
+            <path d="${cloudPath}" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+            <g stroke="#000000" stroke-width="3.2" stroke-linecap="round">
+              <line x1="22" y1="51" x2="20" y2="56"/>
+              <line x1="33" y1="51" x2="31" y2="56"/>
+              <line x1="44" y1="51" x2="42" y2="56"/>
+            </g>
+          </svg>`;
+
+        case 'rain':
+          return `<svg ${common}>
+            <path d="${cloudPath}" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+            <g stroke="#000000" stroke-width="3.4" stroke-linecap="round">
+              <line x1="22" y1="50" x2="18" y2="59"/>
+              <line x1="33" y1="50" x2="29" y2="59"/>
+              <line x1="44" y1="50" x2="40" y2="59"/>
+            </g>
+          </svg>`;
+
+        case 'heavy-rain':
+          return `<svg ${common}>
+            <path d="${cloudPath}" fill="#dadce0" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+            <g stroke="#000000" stroke-width="3.6" stroke-linecap="round">
+              <line x1="19" y1="49" x2="14" y2="60"/>
+              <line x1="29" y1="49" x2="24" y2="60"/>
+              <line x1="39" y1="49" x2="34" y2="60"/>
+              <line x1="49" y1="49" x2="44" y2="60"/>
+            </g>
+          </svg>`;
+
+        case 'snow':
+          return `<svg ${common}>
+            <path d="${cloudPath}" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+            <g fill="#000000">
+              <circle cx="22" cy="54" r="3.2"/>
+              <circle cx="33" cy="57" r="3.2"/>
+              <circle cx="44" cy="54" r="3.2"/>
+            </g>
+          </svg>`;
+
+        case 'thunderstorm':
+          return `<svg ${common}>
+            <path d="${cloudPath}" fill="#dadce0" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+            <polygon points="33,38 24,51 32,51 29,61 42,47 34,47" fill="#000000" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>`;
+
+        default:
+          return `<svg ${common}>
+            <path d="${cloudPath}" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+          </svg>`;
+      }
+    }
+
+    function formatHeroDate(isoDateStr) {
+      const [datePart] = isoDateStr.split('T');
+      const [y, m, d] = datePart.split('-').map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+      return new Intl.DateTimeFormat('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'UTC'
+      }).format(dt);
+    }
+
+    function formatShortDay(isoDateStr) {
+      const [y, m, d] = isoDateStr.split('-').map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+      const weekday = new Intl.DateTimeFormat('en-US', {
+        weekday: 'long',
+        timeZone: 'UTC'
+      }).format(dt);
+      const monthDay = new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC'
+      }).format(dt);
+      return { weekday, monthDay };
+    }
+
+    function formatUpdatedTimestamp() {
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/Berlin',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        hourCycle: 'h23'
+      }).formatToParts(now);
+
+      const get = (type) => (parts.find((p) => p.type === type) || {}).value || '00';
+      return `Updated: ${get('day')}.${get('month')}.${get('year')}, ${get('hour')}:${get('minute')}`;
+    }
+
+    function summarizeHourlySlice(hoursSlice, fallbackTemp, periodSuffix, activeCurrentHour = null) {
+      const SNOW_CODES = new Set([71, 73, 75, 77, 85, 86]);
+      const SLEET_CODES = new Set([56, 57, 66, 67]);
+      const RAIN_CODES = new Set([51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99]);
+
+      if (hoursSlice.length === 0) {
+        const isSnow = fallbackTemp <= 0;
+        return {
+          isSnow,
+          noPrecipExpected: true,
+          label: `${isSnow ? 'Snow' : 'Rain'} ${periodSuffix}`,
+          probText: '0%',
+          scheduleText: isSnow ? 'No snow expected' : 'No rain expected'
+        };
+      }
+
+      let maxProb = 0;
+      let totalMm = 0;
+      let peakHour = hoursSlice[0].hour;
+      let hasSnow = false;
+      let hasSleet = false;
+      const wetHours = [];
+
+      for (const h of hoursSlice) {
+        if (h.prob > maxProb) {
+          maxProb = h.prob;
+          peakHour = h.hour;
+        }
+        totalMm += h.precip;
+        const isSnowHour = h.snow > 0 || SNOW_CODES.has(h.code);
+        const isSleetHour = SLEET_CODES.has(h.code);
+        const isRainHour = RAIN_CODES.has(h.code);
+        const isWet = h.prob >= 35 || h.precip >= 0.1 || isSnowHour || isSleetHour || isRainHour;
+
+        if (isSnowHour) hasSnow = true;
+        if (isSleetHour) hasSleet = true;
+        if (isWet) wetHours.push(h.hour);
+      }
+
+      let kind = 'Rain';
+      let isSnow = false;
+      if (hasSnow || (maxProb >= 20 && fallbackTemp <= 0)) {
+        kind = 'Snow';
+        isSnow = true;
+      } else if (hasSleet) {
+        kind = 'Sleet';
+        isSnow = true;
+      }
+
+      const padClock = (n) => `${String(n % 24).padStart(2, '0')}:00`;
+
+      let scheduleText = '';
+      let noPrecipExpected = false;
+      if (wetHours.length > 0) {
+        const ranges = [];
+        let start = wetHours[0];
+        let prev = wetHours[0];
+        for (let i = 1; i < wetHours.length; i++) {
+          if (wetHours[i] === prev + 1) {
+            prev = wetHours[i];
+          } else {
+            ranges.push([start, prev]);
+            start = wetHours[i];
+            prev = wetHours[i];
+          }
+        }
+        ranges.push([start, prev]);
+
+        const formatRange = ([s, e]) => {
+          const endClock = padClock(e + 1);
+          if (activeCurrentHour !== null && s === activeCurrentHour) return `Now–${endClock}`;
+          if (s === e) return `~${padClock(s)}`;
+          return `${padClock(s)}–${endClock}`;
+        };
+
+        if (ranges.length === 1) {
+          const r = formatRange(ranges[0]);
+          scheduleText = r.startsWith('Now') ? r : `Expected ${r}`;
+        } else if (ranges.length === 2) {
+          const r1 = formatRange(ranges[0]);
+          const r2 = formatRange(ranges[1]);
+          const twoRanges = r1.startsWith('Now') ? `${r1}, ${r2}` : `Expected ${r1}, ${r2}`;
+          scheduleText = twoRanges.length <= 28 ? twoRanges : `Expected from ${padClock(ranges[0][0])}`;
+        } else {
+          scheduleText = `Expected from ${padClock(ranges[0][0])}`;
+        }
+      } else if (maxProb >= 20) {
+        scheduleText = `Slight chance ~${padClock(peakHour)}`;
+      } else {
+        noPrecipExpected = true;
+        scheduleText = `No ${kind.toLowerCase()} expected`;
+      }
+
+      const mmText = totalMm >= 0.1 ? ` (${totalMm.toFixed(1)} mm)` : '';
+
+      return {
+        isSnow,
+        noPrecipExpected,
+        label: `${kind} ${periodSuffix}`,
+        probText: `${Math.round(maxProb)}%${mmText}`,
+        scheduleText
+      };
+    }
+
+    function analyzeTodayPrecipitation(hourly, daily, currentIsoTime, currentTemp) {
+      const todayDate = currentIsoTime.slice(0, 10);
+      const currentHourPrefix = currentIsoTime.slice(0, 13);
+      const currentHourNum = Number(currentIsoTime.slice(11, 13));
+
+      const collectHours = (dateStr, minHourPrefix = null, minHour = 0, maxHour = 23) => {
+        const list = [];
+        for (let i = 0; i < hourly.time.length; i++) {
+          const t = hourly.time[i];
+          if (!t.startsWith(dateStr)) continue;
+          if (minHourPrefix && t.slice(0, 13) < minHourPrefix) continue;
+          const hr = Number(t.slice(11, 13));
+          if (hr < minHour || hr > maxHour) continue;
+          list.push({
+            hour: hr,
+            prob: hourly.precipitation_probability?.[i] ?? 0,
+            precip: hourly.precipitation?.[i] ?? 0,
+            snow: hourly.snowfall?.[i] ?? 0,
+            code: hourly.weather_code?.[i] ?? 0
+          });
+        }
+        return list;
+      };
+
+      const remainingToday = collectHours(todayDate, currentHourPrefix);
+      const todaySummary = summarizeHourlySlice(
+        remainingToday,
+        currentTemp,
+        currentHourNum >= 20 ? 'Tonight' : 'Today',
+        currentHourNum
+      );
+
+      // Evening context shift: after 20:00, if tonight is dry, show Tomorrow's daytime forecast (06:00–22:00)
+      if (currentHourNum >= 20 && todaySummary.noPrecipExpected && daily?.time?.[1]) {
+        const tomorrowDate = daily.time[1];
+        const tomorrowHours = collectHours(tomorrowDate, null, 6, 22);
+        const tomorrowTemp = daily.temperature_2m_max?.[1] ?? currentTemp;
+        return summarizeHourlySlice(tomorrowHours, tomorrowTemp, 'Tomorrow', null);
+      }
+
+      return todaySummary;
+    }
+
+    // Standard WHO Global Solar UV Index scale is 0–11+ (0–2 Low, 3–5 Mod, 6–7 High, 8–10 V.High, 11+ Extr.)
+    function formatUvMetric(uvRaw) {
+      if (uvRaw === undefined || uvRaw === null || Number.isNaN(Number(uvRaw))) return '--';
+      const u = Math.round(Number(uvRaw));
+      let level = 'Low';
+      if (u >= 11) level = 'Extr.';
+      else if (u >= 8) level = 'V.High';
+      else if (u >= 6) level = 'High';
+      else if (u >= 3) level = 'Mod';
+      return `${u}<span class="metric-denom">/11</span> <span class="metric-level">· ${level}</span>`;
+    }
+
+    // Build 24-Hour Precision SVG Meteogram (Temperature + Rain Chance % + Rain Amount mm)
+    function renderHourlyChartSvg(hourly, currentIsoTime) {
+      const currentHourPrefix = currentIsoTime.slice(0, 13);
+      let startIdx = hourly.time.findIndex((t) => t.slice(0, 13) >= currentHourPrefix);
+      if (startIdx < 0) startIdx = 0;
+
+      // 25 points = full 24-hour span (k = 0 .. 24, landing symmetrically on 3h ticks)
+      const N = 25;
+      const points = [];
+      for (let k = 0; k < N && startIdx + k < hourly.time.length; k++) {
+        const idx = startIdx + k;
+        const timeStr = hourly.time[idx];
+        const hourNum = Number(timeStr.slice(11, 13));
+        points.push({
+          k,
+          dateStr: timeStr.slice(0, 10),
+          hourNum,
+          hourLabel: timeStr.slice(11, 16),
+          temp: hourly.temperature_2m[idx],
+          prob: hourly.precipitation_probability?.[idx] ?? 0,
+          mm: hourly.precipitation?.[idx] ?? 0,
+          code: hourly.weather_code?.[idx] ?? 0,
+          isDay: hourly.is_day ? hourly.is_day[idx] : (hourNum >= 7 && hourNum <= 20 ? 1 : 0)
+        });
+      }
+
+      if (points.length === 0) return '';
+
+      // SVG coordinate system (exact integer pixels for crisp E-Ink rendering)
+      const W = 528;
+      const H = 368;
+      const stepX = 19; // 24 intervals * 19px = 456px
+      const xStart = 40; // x(0)=40 .. x(24)=496 (room on left for 100%/50% scale labels)
+      const xOf = (k) => xStart + k * stepX;
+      const xAxisLeft = xStart - 9;
+      const xAxisRight = xOf(points.length - 1) + 9;
+
+      // Temperature track: y in [66 .. 140]
+      const yTempTop = 66;
+      const yTempBot = 140;
+      const temps = points.map((p) => p.temp);
+      const minT = Math.min(...temps);
+      const maxT = Math.max(...temps);
+      const spanT = Math.max(maxT - minT, 4);
+      const yOfTemp = (t) => Math.round(yTempBot - ((t - minT) / spanT) * (yTempBot - yTempTop));
+
+      // Tall Precipitation track: y in [196 .. 336] (height 140px — 84% taller for crisp E-Ink legibility)
+      const yPrecipTop = 196;
+      const yPrecipBase = 336;
+      const yPrecipMid = Math.round((yPrecipTop + yPrecipBase) / 2);
+      const precipTrackH = yPrecipBase - yPrecipTop; // 140px
+      const maxMmScale = Math.max(2.0, ...points.map((p) => p.mm));
+
+      const parts = [];
+
+      // 1. Midnight vertical divider(s) (00:00)
+      for (const p of points) {
+        if (p.hourNum === 0 && p.k > 0) {
+          const x = xOf(p.k);
+          parts.push(
+            `<line x1="${x}" y1="32" x2="${x}" y2="${yPrecipBase}" stroke="#888888" stroke-width="1.3" stroke-dasharray="4 4" />`
+          );
+        }
+      }
+
+      // 2. Mini Weather Icons along the top (every 3 hours: k = 0, 3, ..., 24)
+      for (const p of points) {
+        if (p.k % 3 === 0) {
+          const x = xOf(p.k);
+          const info = getWeatherInfo(p.code, p.isDay);
+          const iconSvg = renderWeatherSvg(info.icon, `x="${x - 14}" y="2" width="28" height="28"`);
+          parts.push(iconSvg);
+        }
+      }
+
+      // 3. Temperature area shading + crisp line + 3-hour dots & labels
+      const tempCoords = points.map((p) => [xOf(p.k), yOfTemp(p.temp)]);
+      const polyPoints = tempCoords.map(([x, y]) => `${x},${y}`).join(' ');
+      const firstX = tempCoords[0][0];
+      const lastX = tempCoords[tempCoords.length - 1][0];
+      const areaPoints = `${firstX},${yTempBot + 10} ${polyPoints} ${lastX},${yTempBot + 10}`;
+
+      parts.push(`<polygon points="${areaPoints}" fill="#e2e5e9" />`);
+      parts.push(
+        `<polyline points="${polyPoints}" fill="none" stroke="#000000" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />`
+      );
+
+      for (const p of points) {
+        if (p.k % 3 === 0) {
+          const x = xOf(p.k);
+          const y = yOfTemp(p.temp);
+          const fill = p.k === 0 ? '#000000' : '#ffffff';
+          parts.push(
+            `<circle cx="${x}" cy="${y}" r="4.2" fill="${fill}" stroke="#000000" stroke-width="2.4" />`
+          );
+          parts.push(
+            `<text x="${x}" y="${y - 10}" text-anchor="middle" font-family="Inter, sans-serif" font-size="13.5" font-weight="800" fill="#000000">${Math.round(p.temp)}°</text>`
+          );
+        }
+      }
+
+      // 3b. Day-boundary weekday pill (e.g. "THU →") in the open channel along the 00:00 divider
+      for (const p of points) {
+        if (p.hourNum === 0 && p.k > 0) {
+          const x = xOf(p.k);
+          const [yy, mm, dd] = p.dateStr.split('-').map(Number);
+          const dayShort = new Intl.DateTimeFormat('en-US', {
+            weekday: 'short',
+            timeZone: 'UTC'
+          })
+            .format(new Date(Date.UTC(yy, mm - 1, dd, 12, 0, 0)))
+            .toUpperCase();
+          const pillW = 44;
+          const pillX = Math.min(Math.max(x - pillW / 2, xAxisLeft), xAxisRight - pillW);
+          parts.push(
+            `<rect x="${pillX}" y="156" width="${pillW}" height="16" rx="4" fill="#ffffff" stroke="#000000" stroke-width="1.3" />`
+          );
+          parts.push(
+            `<text x="${pillX + pillW / 2}" y="167.5" text-anchor="middle" font-family="Inter, sans-serif" font-size="9.5" font-weight="800" letter-spacing="0.03em" fill="#000000">${dayShort} →</text>`
+          );
+        }
+      }
+
+      // 4. Precipitation guide lines (100% and 50%) with left-side scale labels
+      parts.push(
+        `<line x1="${xAxisLeft}" y1="${yPrecipTop}" x2="${xAxisRight}" y2="${yPrecipTop}" stroke="#b8bec6" stroke-width="1.2" stroke-dasharray="3 3" />`
+      );
+      parts.push(
+        `<text x="${xAxisLeft - 5}" y="${yPrecipTop + 3.5}" text-anchor="end" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#555555">100%</text>`
+      );
+      parts.push(
+        `<line x1="${xAxisLeft}" y1="${yPrecipMid}" x2="${xAxisRight}" y2="${yPrecipMid}" stroke="#c6ccd3" stroke-width="1.2" stroke-dasharray="3 3" />`
+      );
+      parts.push(
+        `<text x="${xAxisLeft - 5}" y="${yPrecipMid + 3.5}" text-anchor="end" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#555555">50%</text>`
+      );
+
+      // 5. Hourly Precipitation Bars (Light-gray = Probability %, Solid black = Amount mm)
+      const barW = 13;
+      for (const p of points) {
+        const x = xOf(p.k);
+        const barLeft = x - barW / 2;
+
+        // Probability bar (0..100%)
+        if (p.prob > 0) {
+          const hProb = Math.max(4, Math.round((p.prob / 100) * precipTrackH));
+          const yProb = yPrecipBase - hProb;
+          parts.push(
+            `<rect x="${barLeft}" y="${yProb}" width="${barW}" height="${hProb}" rx="3" fill="#cfd4da" stroke="#000000" stroke-width="1.4" />`
+          );
+        }
+
+        // Rain amount bar (mm) overlaid in solid black from base
+        if (p.mm > 0) {
+          const hMm = Math.max(5, Math.round(Math.min(p.mm / maxMmScale, 1) * precipTrackH));
+          const yMm = yPrecipBase - hMm;
+          parts.push(
+            `<rect x="${barLeft}" y="${yMm}" width="${barW}" height="${hMm}" rx="2.5" fill="#000000" />`
+          );
+        }
+      }
+
+      // 6. Non-overlapping Precipitation Peak Callout Labels (% and mm) at true local crests
+      const barHeightAt = (idx) => {
+        if (idx < 0 || idx >= points.length) return 0;
+        const pt = points[idx];
+        const hp = pt.prob > 0 ? Math.max(4, Math.round((pt.prob / 100) * precipTrackH)) : 0;
+        const hm = pt.mm > 0 ? Math.max(5, Math.round(Math.min(pt.mm / maxMmScale, 1) * precipTrackH)) : 0;
+        return Math.max(hp, hm);
+      };
+
+      const scoreOf = (p) => p.prob + p.mm * 35;
+      const isLocalPeak = (idx) => {
+        const cur = scoreOf(points[idx]);
+        const prev = idx > 0 ? scoreOf(points[idx - 1]) : -1;
+        const next = idx < points.length - 1 ? scoreOf(points[idx + 1]) : -1;
+        return cur >= prev && cur >= next && (cur > prev || cur > next);
+      };
+
+      const candidates = points
+        .filter((p, idx) => (p.prob >= 20 || p.mm >= 0.2) && isLocalPeak(idx))
+        .sort((a, b) => scoreOf(b) - scoreOf(a));
+
+      const chosenPeaks = [];
+      for (const c of candidates) {
+        if (chosenPeaks.every((existing) => Math.abs(existing.k - c.k) >= 4)) {
+          chosenPeaks.push(c);
+        }
+      }
+
+      for (const best of chosenPeaks) {
+        const x = xOf(best.k);
+        const clearH = Math.max(barHeightAt(best.k), barHeightAt(best.k - 1), barHeightAt(best.k + 1));
+        const barTop = yPrecipBase - clearH;
+
+        if (best.mm >= 0.1) {
+          parts.push(
+            `<text x="${x}" y="${barTop - 17}" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#000000">${best.prob}%</text>`
+          );
+          parts.push(
+            `<text x="${x}" y="${barTop - 4}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#111111">${best.mm.toFixed(1)}mm</text>`
+          );
+        } else {
+          parts.push(
+            `<text x="${x}" y="${barTop - 5}" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#000000">${best.prob}%</text>`
+          );
+        }
+      }
+
+      // 7. Bottom X-Axis Line, 1-hour ticks, and 3-hour clock labels
+      parts.push(
+        `<line x1="${xAxisLeft}" y1="${yPrecipBase}" x2="${xAxisRight}" y2="${yPrecipBase}" stroke="#000000" stroke-width="1.8" />`
+      );
+
+      for (const p of points) {
+        const x = xOf(p.k);
+        const isMajor = p.k % 3 === 0;
+        const tickLen = isMajor ? 6 : 3;
+        parts.push(
+          `<line x1="${x}" y1="${yPrecipBase}" x2="${x}" y2="${yPrecipBase + tickLen}" stroke="#000000" stroke-width="${isMajor ? 1.8 : 1.2}" />`
+        );
+        if (isMajor) {
+          parts.push(
+            `<text x="${x}" y="${yPrecipBase + 22}" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#000000">${p.hourLabel}</text>`
+          );
+        }
+      }
+
+      return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" aria-label="24-hour temperature and precipitation chart">${parts.join('')}</svg>`;
+    }
+
+    function addDaysIso(isoDate, offsetDays) {
+      const [y, m, d] = isoDate.split('-').map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d + offsetDays, 12, 0, 0));
+      return dt.toISOString().slice(0, 10);
+    }
+
+    async function loadWeather() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const rawTestDate = (urlParams.get('data') || urlParams.get('date') || '').trim();
+        const testDate = /^\d{4}-\d{2}-\d{2}$/.test(rawTestDate) ? rawTestDate : null;
+        const rawTestHour = urlParams.get('hour');
+        const rawTestWind = urlParams.get('wind');
+
+        let data = null;
+        let usedFallbackRemap = false;
+
+        if (testDate) {
+          const endDate = addDaysIso(testDate, 4);
+          const rangeUrl = `${BASE_API_URL}&start_date=${testDate}&end_date=${endDate}`;
+          try {
+            const res = await fetch(rangeUrl, { cache: 'no-store' });
+            if (res.ok) {
+              const candidate = await res.json();
+              if (
+                candidate?.hourly?.temperature_2m?.slice(0, 48).every((v) => v !== null && v !== undefined) &&
+                candidate?.daily?.temperature_2m_max?.slice(0, 4).every((v) => v !== null && v !== undefined)
+              ) {
+                data = candidate;
+              }
+            }
+          } catch (_) {
+            // Fall through to standard 5-day forecast with date remapping
+          }
+
+          if (!data) {
+            const fallbackRes = await fetch(API_URL, { cache: 'no-store' });
+            if (!fallbackRes.ok) {
+              throw new Error(`Open-Meteo HTTP error ${fallbackRes.status}`);
+            }
+            data = await fallbackRes.json();
+            usedFallbackRemap = true;
+          }
+        } else {
+          const response = await fetch(API_URL, { cache: 'no-store' });
+          if (!response.ok) {
+            throw new Error(`Open-Meteo HTTP error ${response.status}`);
+          }
+          data = await response.json();
+        }
+
+        // If testing a date beyond Open-Meteo's forecast horizon, remap the 5-day dates to start at testDate
+        if (testDate && usedFallbackRemap) {
+          for (let d = 0; d < data.daily.time.length; d++) {
+            const mappedDate = addDaysIso(testDate, d);
+            data.daily.time[d] = mappedDate;
+            if (data.daily.sunrise?.[d]) {
+              data.daily.sunrise[d] = mappedDate + data.daily.sunrise[d].slice(10);
+            }
+            if (data.daily.sunset?.[d]) {
+              data.daily.sunset[d] = mappedDate + data.daily.sunset[d].slice(10);
+            }
+          }
+          for (let h = 0; h < data.hourly.time.length; h++) {
+            const mappedDate = addDaysIso(testDate, Math.floor(h / 24));
+            data.hourly.time[h] = mappedDate + data.hourly.time[h].slice(10);
+          }
+        }
+
+        // Synthesize current weather snapshot for the simulated date/hour when ?data=YYYY-MM-DD is used
+        if (testDate) {
+          const simHourNum =
+            rawTestHour !== null && /^\d{1,2}$/.test(rawTestHour)
+              ? Math.min(23, Math.max(0, Number(rawTestHour)))
+              : 10;
+          const simHourStr = String(simHourNum).padStart(2, '0');
+          const targetPrefix = `${testDate}T${simHourStr}`;
+          let hIdx = data.hourly.time.findIndex((t) => t.startsWith(targetPrefix));
+          if (hIdx < 0) hIdx = 0;
+
+          data.current = {
+            time: `${targetPrefix}:00`,
+            temperature_2m: data.hourly.temperature_2m?.[hIdx] ?? data.current?.temperature_2m ?? 12,
+            apparent_temperature:
+              data.hourly.apparent_temperature?.[hIdx] ??
+              data.hourly.temperature_2m?.[hIdx] ??
+              data.current?.temperature_2m ??
+              12,
+            weather_code: data.hourly.weather_code?.[hIdx] ?? data.current?.weather_code ?? 2,
+            wind_speed_10m: data.hourly.wind_speed_10m?.[hIdx] ?? data.current?.wind_speed_10m ?? 0,
+            is_day: data.hourly.is_day?.[hIdx] ?? (simHourNum >= 7 && simHourNum <= 19 ? 1 : 0)
+          };
+        }
+
+        if (rawTestWind !== null && !Number.isNaN(Number(rawTestWind))) {
+          data.current.wind_speed_10m = Number(rawTestWind);
+        }
+
+        // 1. Hero Card (Current Weather — no redundant city header)
+        const current = data.current;
+        const currentHourNum = Number(current.time.slice(11, 13));
+        const currentInfo = getWeatherInfo(current.weather_code, current.is_day);
+
+        document.getElementById('current-date').textContent = formatHeroDate(current.time);
+
+        // Today's Public Holiday / Kita Closure / No Shops badges
+        const todayIso = current.time.slice(0, 10);
+        const todaySpecial = getDaySpecialStatus(todayIso);
+        const todayBadges = renderDayBadges(todaySpecial, true);
+        document.getElementById('today-badges').innerHTML = todayBadges.join('');
+
+        document.getElementById('hero-icon').innerHTML = renderWeatherSvg(currentInfo.icon);
+        document.getElementById('hero-temp').textContent = `${Math.round(current.temperature_2m)}°`;
+        document.getElementById('hero-condition').textContent = currentInfo.label;
+
+        const feelsLike = Math.round(current.apparent_temperature ?? current.temperature_2m);
+        const todayMax = Math.round(data.daily.temperature_2m_max[0]);
+        const todayMin = Math.round(data.daily.temperature_2m_min[0]);
+        document.getElementById('hero-feels').textContent = `Feels like ${feelsLike}°`;
+        document.getElementById('hero-high').textContent = `H: ${todayMax}°`;
+        document.getElementById('hero-low').textContent = `L: ${todayMin}°`;
+
+        // Rain / Snow chance, amount & expected time window (shifts to Tomorrow after 20:00 when tonight is dry)
+        const precipToday = analyzeTodayPrecipitation(data.hourly, data.daily, current.time, current.temperature_2m);
+        document.getElementById('hero-precip-label').textContent = precipToday.label;
+        document.getElementById('hero-precip-prob').textContent = precipToday.probText;
+        document.getElementById('hero-precip-time').textContent = precipToday.scheduleText;
+        if (precipToday.isSnow) {
+          document.getElementById('hero-precip-icon').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="2" x2="12" y2="22" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+            <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
+            ${precipToday.noPrecipExpected ? '<line x1="3" y1="3" x2="21" y2="21" stroke="#ffffff" stroke-width="5" /><line x1="3" y1="3" x2="21" y2="21" stroke="#000000" stroke-width="2.4" />' : ''}
+          </svg>`;
+        } else {
+          document.getElementById('hero-precip-icon').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#f1f3f4" />
+            <path d="M12 12v7a2 2 0 0 0 4 0" />
+            <path d="M12 2v1" />
+            ${precipToday.noPrecipExpected ? '<line x1="3" y1="3" x2="21" y2="21" stroke="#ffffff" stroke-width="5" /><line x1="3" y1="3" x2="21" y2="21" stroke="#000000" stroke-width="2.4" />' : ''}
+          </svg>`;
+        }
+
+        // UV Index (shows Tomorrow's peak UV after 20:00, otherwise Today's peak UV)
+        const isEveningTomorrowShift = currentHourNum >= 20 && data.daily.uv_index_max?.length > 1;
+        const uvTargetVal = isEveningTomorrowShift ? data.daily.uv_index_max[1] : data.daily.uv_index_max?.[0];
+        document.getElementById('hero-uv-label').textContent = isEveningTomorrowShift ? 'UV (Tom.)' : 'UV Index';
+        document.getElementById('hero-uv').innerHTML = formatUvMetric(uvTargetVal);
+
+        // Wind in knots (kn) — displayed ONLY when wind is unusually strong (>= 15 kn current or >= 18 kn daily max)
+        const STRONG_WIND_CURRENT_KN = 15;
+        const STRONG_WIND_DAILY_MAX_KN = 18;
+        const currentWindKn = Number(current.wind_speed_10m ?? 0);
+        const todayMaxWindKn = Number(data.daily.wind_speed_10m_max?.[0] ?? 0);
+        const isStrongWind =
+          currentWindKn >= STRONG_WIND_CURRENT_KN || todayMaxWindKn >= STRONG_WIND_DAILY_MAX_KN;
+
+        const windBoxEl = document.getElementById('hero-wind-box');
+        const uvBoxEl = document.getElementById('hero-uv-box');
+        if (isStrongWind) {
+          windBoxEl.style.display = '';
+          uvBoxEl.classList.remove('metric-box-full');
+          const showCurrent = currentWindKn >= STRONG_WIND_CURRENT_KN;
+          const windKnVal = Math.round(showCurrent ? currentWindKn : todayMaxWindKn);
+          document.getElementById('hero-wind-label').textContent = showCurrent ? 'Strong Wind' : 'Peak Wind';
+          document.getElementById('hero-wind').textContent = `${windKnVal} kn`;
+        } else {
+          windBoxEl.style.display = 'none';
+          uvBoxEl.classList.add('metric-box-full');
+        }
+
+        const sunriseRaw = data.daily.sunrise?.[0] || '';
+        const sunsetRaw = data.daily.sunset?.[0] || '';
+        document.getElementById('hero-sunrise').textContent = sunriseRaw ? sunriseRaw.slice(11, 16) : '--:--';
+        document.getElementById('hero-sunset').textContent = sunsetRaw ? sunsetRaw.slice(11, 16) : '--:--';
+
+        // 2. Top Right: 24-Hour Precision Meteogram Chart
+        document.getElementById('hourly-chart').innerHTML = renderHourlyChartSvg(data.hourly, current.time);
+
+        // 3. Bottom Right: Next 3 Days Forecast (indices 1, 2, 3)
+        const UMBRELLA_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#000000"/><path d="M12 12v7a2 2 0 0 0 4 0"/><path d="M12 2v1"/></svg>`;
+        const UMBRELLA_OFF_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#f1f3f4"/><path d="M12 12v7a2 2 0 0 0 4 0"/><path d="M12 2v1"/><line x1="2.5" y1="2.5" x2="21.5" y2="21.5" stroke="#ffffff" stroke-width="5"/><line x1="2.5" y1="2.5" x2="21.5" y2="21.5" stroke="#000000" stroke-width="2.6"/></svg>`;
+        const dailyContainer = document.getElementById('daily-list');
+        const nextThreeDaysHtml = [];
+        for (let i = 1; i <= 3; i++) {
+          const dateStr = data.daily.time[i];
+          if (!dateStr) continue;
+          const { weekday, monthDay } = formatShortDay(dateStr);
+          const dayCode = data.daily.weather_code[i];
+          const dayInfo = getWeatherInfo(dayCode, 1);
+          const maxT = Math.round(data.daily.temperature_2m_max[i]);
+          const minT = Math.round(data.daily.temperature_2m_min[i]);
+          const precipMax = data.daily.precipitation_probability_max[i] ?? 0;
+          const precipSum = data.daily.precipitation_sum?.[i] ?? 0;
+          const mmBadge = precipSum >= 0.1 ? ` · ${precipSum.toFixed(1)}mm` : '';
+          const isDryDay = precipMax < 20 && precipSum < 0.1;
+          const pillIcon = isDryDay ? UMBRELLA_OFF_SVG : UMBRELLA_SVG;
+
+          const daySpecial = getDaySpecialStatus(dateStr);
+          const dayBadges = renderDayBadges(daySpecial, false);
+          const holidaySub = daySpecial.holiday ? `<strong>${daySpecial.holiday}</strong> · ` : '';
+
+          nextThreeDaysHtml.push(`
+            <article class="daily-card">
+              <div class="daily-left">
+                <div class="daily-title-row">
+                  <span class="daily-day">${weekday}</span>
+                  ${dayBadges.join('')}
+                </div>
+                <span class="daily-sub">${monthDay} · ${holidaySub}${dayInfo.label}</span>
+              </div>
+              <div class="daily-right">
+                <div class="daily-icon" aria-hidden="true">${renderWeatherSvg(dayInfo.icon)}</div>
+                <div class="daily-right-stack">
+                  <div class="daily-temps">
+                    <span class="temp-max">${maxT}°</span>
+                    <span class="temp-sep">/</span>
+                    <span class="temp-min">${minT}°</span>
+                  </div>
+                  <span class="precip-pill">${pillIcon}<span>${precipMax}%${mmBadge}</span></span>
+                </div>
+              </div>
+            </article>
+          `);
+        }
+        dailyContainer.innerHTML = nextThreeDaysHtml.join('');
+
+        // 4. Footer Service Timestamp
+        document.getElementById('footer-updated').textContent = formatUpdatedTimestamp();
+
+        // Signal to Puppeteer that data and DOM are ready
+        document.body.setAttribute('data-weather-ready', 'true');
+        window.__WEATHER_READY__ = true;
+      } catch (err) {
+        console.error('Failed to load weather:', err);
+        window.__WEATHER_ERROR__ = err.message || String(err);
+      }
+    }
+
+    loadWeather();
+  </script>
+</body>
+
+</html>

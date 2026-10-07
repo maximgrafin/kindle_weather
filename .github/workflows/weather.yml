@@ -1,0 +1,56 @@
+name: Render & Deploy Kindle Weather Widget
+
+on:
+  schedule:
+    # Runs every 1 hour at minute 0 (UTC).
+    # To change the update interval to every 3 hours, replace the line below with:
+    # - cron: '0 */3 * * *'
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Berlin
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache Puppeteer browser binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/puppeteer
+          key: ${{ runner.os }}-puppeteer-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-puppeteer-
+
+      - name: Install dependencies and Chromium for Puppeteer
+        run: |
+          npm install
+          npx puppeteer browsers install chrome
+
+      - name: Render weather.png (1024x758)
+        run: node render.js
+
+      - name: Prepare publish directory
+        run: |
+          mkdir -p dist
+          cp weather.png dist/weather.png
+
+      - name: Deploy weather.png to GitHub Pages (gh-pages)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true
+          commit_message: 'chore: update weather.png'
