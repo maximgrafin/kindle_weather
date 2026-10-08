@@ -2,10 +2,9 @@ name: Render & Deploy Kindle Weather Widget
 
 on:
   schedule:
-    # Runs every 1 hour at minute 0 (UTC).
-    # To change the update interval to every 3 hours, replace the line below with:
-    # - cron: '0 */3 * * *'
-    - cron: '0 * * * *'
+    # Runs every 1 hour at minute 52 (off-peak minute to avoid GitHub Actions :00/:30 queue drops).
+    # Ready just before the top of every hour.
+    - cron: '52 * * * *'
   workflow_dispatch:
 
 permissions:

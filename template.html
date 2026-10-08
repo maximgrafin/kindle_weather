@@ -742,25 +742,54 @@
 
     const API_URL = `${BASE_API_URL}&forecast_days=5`;
 
-    const KITA_CLOSURES = [
-      { date: '2026-10-07', label: 'Kita Closed' },
-      { date: '2026-10-19', label: 'Kita Closed' },
-      { date: '2026-11-04', label: 'Kita Closed' },
-      { date: '2026-12-03', label: 'Kita Closed' },
-      { date: '2026-12-23', label: 'Kita  Closed' },
-      { start: '2026-12-24', end: '2027-01-03', label: 'Kita Closed' },
-      { start: '2027-02-18', end: '2027-02-19', label: 'Kita Closed' },
-      { start: '2027-04-15', end: '2027-04-16', label: 'Kita Closed' },
-      { start: '2027-05-13', end: '2027-05-14', label: 'Kita Closed' },
-      { date: '2027-06-25', label: 'Kita Closed' },
-      { date: '2027-08-02', label: 'Kita Closed' },
-      { date: '2027-10-04', label: 'Kita Closed' },
-      { start: '2027-11-18', end: '2027-11-19', label: 'Kita Closed' },
-      { start: '2027-12-24', end: '2028-01-02', label: 'Kita Closed' },
-      { start: '2027-03-22', end: '2027-03-25', label: 'Kita Closed' },
-      { date: '2027-05-07', label: 'Kita Closed' },
-      { date: '2027-12-23', label: 'Kita Closed' }
-    ];
+    const KITA_CLOSURES = new Set([
+      // 2026
+      '2026-10-07',
+      '2026-10-19',
+      '2026-11-04',
+      '2026-12-03',
+      '2026-12-23',
+      '2026-12-24',
+      '2026-12-25',
+      '2026-12-26',
+      '2026-12-27',
+      '2026-12-28',
+      '2026-12-29',
+      '2026-12-30',
+      '2026-12-31',
+
+      // 2027
+      '2027-01-01',
+      '2027-01-02',
+      '2027-01-03',
+      '2027-02-18',
+      '2027-02-19',
+      '2027-03-22',
+      '2027-03-23',
+      '2027-03-24',
+      '2027-03-25',
+      '2027-04-15',
+      '2027-04-16',
+      '2027-05-07',
+      '2027-05-13',
+      '2027-05-14',
+      '2027-06-25',
+      '2027-08-02',
+      '2027-10-04',
+      '2027-11-18',
+      '2027-11-19',
+      '2027-12-23',
+      '2027-12-24',
+      '2027-12-25',
+      '2027-12-26',
+      '2027-12-27',
+      '2027-12-28',
+      '2027-12-29',
+      '2027-12-30',
+      '2027-12-31',
+      '2028-01-01',
+      '2028-01-02'
+    ]);
 
     const BERLIN_HOLIDAYS = {
       '2026-12-25': 'Christmas Day',
@@ -777,7 +806,7 @@
       '2027-12-26': '2nd Christmas Day'
     };
 
-    // Crossed-out Kita backpack (Rucksack) monochrome SVG ("Kita Closed")
+    // Crossed-out Kita backpack (Rucksack) monochrome SVG ("No Kita")
     function renderNoKitaSvg(knockoutBg) {
       return `<svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6V4.2a3 3 0 0 1 6 0V6"/><rect x="5" y="6" width="14" height="15" rx="4.2"/><path d="M8.5 13.5h7v4.5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-4.5Z"/><line x1="3" y1="3" x2="21" y2="21" stroke="${knockoutBg}" stroke-width="4.6"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.5"/></svg>`;
     }
@@ -792,50 +821,20 @@
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
       const holiday = BERLIN_HOLIDAYS[isoDateStr] || null;
-
-      let kitaClosed = null;
-      let isSpecialKitaClosure = false;
-      for (const entry of KITA_CLOSURES) {
-        if (typeof entry === 'string') {
-          if (entry === isoDateStr) {
-            kitaClosed = 'Kita Closed';
-            isSpecialKitaClosure = true;
-            break;
-          }
-        } else if (entry && typeof entry === 'object') {
-          if (entry.date === isoDateStr) {
-            kitaClosed = entry.label || 'Kita Closed';
-            isSpecialKitaClosure = true;
-            break;
-          }
-          if (entry.start && entry.end && isoDateStr >= entry.start && isoDateStr <= entry.end) {
-            kitaClosed = entry.label || 'Kita Closed';
-            isSpecialKitaClosure = true;
-            break;
-          }
-        }
-      }
-
-      // Kita is also closed on all Berlin statutory public holidays and weekends
-      if ((holiday || isWeekend) && !kitaClosed) {
-        kitaClosed = 'Kita Closed';
-      }
-
-      // Routine weekend (no statutory holiday or special Kita schedule) uses outlined badge
+      const isSpecialKitaClosure = KITA_CLOSURES.has(isoDateStr);
+      const noKita = Boolean(isSpecialKitaClosure || holiday || isWeekend);
       const isRoutineWeekendKita = Boolean(isWeekend && !holiday && !isSpecialKitaClosure);
-
-      // In Berlin, shops are closed on Sundays and statutory public holidays
       const noShops = Boolean(isSunday || holiday);
 
-      return { holiday, kitaClosed, isWeekend, isRoutineWeekendKita, noShops };
+      return { holiday, noKita, isWeekend, isRoutineWeekendKita, noShops };
     }
 
     function renderDayBadges(special, isHero = false) {
       const badges = [];
-      if (special.kitaClosed) {
+      if (special.noKita) {
         const kitaClass = special.isRoutineWeekendKita ? 'event-badge-kita-weekend' : 'event-badge-kita';
         const kitaIcon = renderNoKitaSvg(special.isRoutineWeekendKita ? '#dcdfe4' : '#000000');
-        badges.push(`<span class="event-badge ${kitaClass}">${kitaIcon}<span>${special.kitaClosed}</span></span>`);
+        badges.push(`<span class="event-badge ${kitaClass}">${kitaIcon}<span>No Kita</span></span>`);
       }
       if (special.noShops) {
         badges.push(`<span class="event-badge event-badge-shops">${NO_SHOPS_SVG}<span>No Shops</span></span>`);
