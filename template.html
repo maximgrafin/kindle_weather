@@ -14,14 +14,14 @@
   <style>
     :root {
       --bg-page: #ffffff;
-      --bg-card: #f1f3f4;
+      --bg-card: #eeeeee;
       --bg-pill: #ffffff;
       --ink-black: #000000;
       --ink-dark: #222222;
       --ink-muted: #444444;
-      --ink-footer: #777777;
+      --ink-footer: #555555;
       --border-strong: 2px solid #000000;
-      --border-thin: 1.5px solid #000000;
+      --border-thin: 2px solid #000000;
       --radius-hero: 30px;
       --radius-card: 24px;
       --radius-pill: 999px;
@@ -103,52 +103,52 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      height: 22px;
-      font-size: 10.5px;
+      gap: 5px;
+      height: 26px;
+      font-size: 12px;
       font-weight: 800;
       letter-spacing: 0.04em;
-      padding: 0 8px;
+      padding: 0 10px;
       border-radius: var(--radius-pill);
       line-height: 1;
       white-space: nowrap;
     }
 
     .hero-header .event-badge {
-      height: 31px;
-      font-size: 14.5px;
+      height: 32px;
+      font-size: 14px;
       padding: 0 14px;
       letter-spacing: 0.05em;
       gap: 6px;
     }
 
     .event-badge .badge-icon {
-      width: 12px;
-      height: 12px;
+      width: 15px;
+      height: 15px;
       flex-shrink: 0;
       display: block;
     }
 
     .hero-header .event-badge .badge-icon {
-      width: 16px;
-      height: 16px;
+      width: 17px;
+      height: 17px;
     }
 
     /* High-alert solid black badge for weekday Kita closures & public holidays */
     .event-badge-kita {
       background-color: #000000;
       color: #ffffff;
-      border: 1.8px solid #000000;
+      border: 2px solid #000000;
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
 
-    /* Routine weekend Kita closures & Sunday/Holiday No Shops share identical grey pill style */
+    /* Routine weekend Kita closures & Sunday/Holiday No Shops share identical quantized grey pill style */
     .event-badge-kita-weekend,
     .event-badge-shops {
-      background-color: #dcdfe4;
+      background-color: #cccccc;
       color: #000000;
-      border: 1.8px solid #000000;
+      border: 2px solid #000000;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -156,15 +156,16 @@
     .event-badge-holiday {
       background-color: #ffffff;
       color: #000000;
-      border: 1.8px solid #000000;
+      border: 2px solid #000000;
     }
 
-    /* Hero Main Condition & Temperature */
+    /* Hero Main Condition & Temperature — vertically balanced between header and metrics */
     .hero-main {
       display: flex;
       flex-direction: column;
       gap: 14px;
-      margin-top: 22px;
+      margin: auto 0;
+      padding-bottom: 6px;
     }
 
     .hero-temp-row {
@@ -222,7 +223,6 @@
 
     /* Hero Bottom Metrics */
     .hero-metrics {
-      margin-top: auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
@@ -232,7 +232,7 @@
       background-color: var(--bg-pill);
       border: var(--border-thin);
       border-radius: 18px;
-      padding: 11px 14px;
+      padding: 11px 12px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -240,11 +240,21 @@
 
     .metric-box-wide {
       grid-column: 1 / -1;
-      padding: 12px 16px;
+      padding: 14px 16px;
     }
 
-    .metric-box-full {
-      grid-column: 1 / -1;
+    .metric-box-alert {
+      background-color: #000000;
+      color: #ffffff;
+    }
+
+    .metric-box-alert .metric-label,
+    .metric-box-alert .metric-value {
+      color: #ffffff;
+    }
+
+    .metric-box-alert .metric-icon svg {
+      stroke: #ffffff;
     }
 
     .metric-icon {
@@ -371,7 +381,7 @@
     .legend-box-prob {
       width: 11px;
       height: 11px;
-      background-color: #cfd4da;
+      background-color: #bbbbbb;
       border: 1.5px solid #000000;
       border-radius: 2px;
       display: inline-block;
@@ -431,11 +441,11 @@
       display: flex;
       align-items: center;
       flex-wrap: nowrap;
-      gap: 6px;
+      gap: 8px;
     }
 
     .daily-day {
-      font-size: 18px;
+      font-size: 19px;
       font-weight: 800;
       letter-spacing: -0.02em;
       color: var(--ink-black);
@@ -474,9 +484,9 @@
       background-color: var(--bg-pill);
       border: var(--border-thin);
       border-radius: var(--radius-pill);
-      height: 20px;
-      padding: 0 7.5px;
-      font-size: 11.5px;
+      height: 22px;
+      padding: 0 8px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--ink-black);
       display: inline-flex;
@@ -512,13 +522,13 @@
       align-items: baseline;
       justify-content: flex-end;
       gap: 4px;
-      height: 22px;
+      height: 24px;
       line-height: 1;
       text-align: right;
     }
 
     .temp-max {
-      font-size: 21px;
+      font-size: 22px;
       font-weight: 800;
       letter-spacing: -0.02em;
       color: var(--ink-black);
@@ -602,7 +612,7 @@
             <div id="hero-precip-icon" class="metric-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round"
                 stroke-linejoin="round">
-                <path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#f1f3f4" />
+                <path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#eeeeee" />
                 <path d="M12 12v7a2 2 0 0 0 4 0" />
                 <path d="M12 2v1" />
               </svg>
@@ -614,11 +624,11 @@
             </div>
           </div>
 
-          <div id="hero-uv-box" class="metric-box metric-box-full">
+          <div id="hero-uv-box" class="metric-box">
             <div class="metric-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round"
                 stroke-linejoin="round">
-                <circle cx="12" cy="12" r="4.5" fill="#f1f3f4" />
+                <circle cx="12" cy="12" r="4.5" fill="#eeeeee" />
                 <line x1="12" y1="2" x2="12" y2="4.5" />
                 <line x1="12" y1="19.5" x2="12" y2="22" />
                 <line x1="4.93" y1="4.93" x2="6.7" y2="6.7" />
@@ -635,7 +645,7 @@
             </div>
           </div>
 
-          <div id="hero-wind-box" class="metric-box" style="display: none;">
+          <div id="hero-wind-box" class="metric-box">
             <div class="metric-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round"
                 stroke-linejoin="round">
@@ -644,7 +654,7 @@
               </svg>
             </div>
             <div class="metric-info">
-              <span id="hero-wind-label" class="metric-label">Strong Wind</span>
+              <span id="hero-wind-label" class="metric-label">Wind</span>
               <span id="hero-wind" class="metric-value">-- kn</span>
             </div>
           </div>
@@ -653,7 +663,7 @@
             <div class="metric-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round"
                 stroke-linejoin="round">
-                <path d="M17 18a5 5 0 0 0-10 0" fill="#f1f3f4" />
+                <path d="M17 18a5 5 0 0 0-10 0" fill="#eeeeee" />
                 <line x1="12" y1="2" x2="12" y2="9" />
                 <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" />
                 <line x1="1" y1="18" x2="3" y2="18" />
@@ -673,7 +683,7 @@
             <div class="metric-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round"
                 stroke-linejoin="round">
-                <path d="M17 18a5 5 0 0 0-10 0" fill="#dadce0" />
+                <path d="M17 18a5 5 0 0 0-10 0" fill="#cccccc" />
                 <line x1="12" y1="9" x2="12" y2="2" />
                 <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" />
                 <line x1="1" y1="18" x2="3" y2="18" />
@@ -808,11 +818,11 @@
 
     // Crossed-out Kita backpack (Rucksack) monochrome SVG ("No Kita")
     function renderNoKitaSvg(knockoutBg) {
-      return `<svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6V4.2a3 3 0 0 1 6 0V6"/><rect x="5" y="6" width="14" height="15" rx="4.2"/><path d="M8.5 13.5h7v4.5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-4.5Z"/><line x1="3" y1="3" x2="21" y2="21" stroke="${knockoutBg}" stroke-width="4.6"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.5"/></svg>`;
+      return `<svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6V4.2a3 3 0 0 1 6 0V6"/><rect x="5" y="6" width="14" height="15" rx="4.2"/><path d="M8.5 13.5h7v4.5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-4.5Z"/><line x1="3" y1="3" x2="21" y2="21" stroke="${knockoutBg}" stroke-width="4.4"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.4"/></svg>`;
     }
 
     // Crossed-out shopping trolley monochrome SVG for Sundays & Berlin public holidays ("No Shops")
-    const NO_SHOPS_SVG = `<svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.6" fill="currentColor"/><circle cx="17" cy="20" r="1.6" fill="currentColor"/><path d="M2 3h3.2l2.2 11a1.8 1.8 0 0 0 1.8 1.4h8.1a1.8 1.8 0 0 0 1.7-1.3L21 6.5H6"/><line x1="3" y1="3" x2="21" y2="21" stroke="#dcdfe4" stroke-width="4.6"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.5"/></svg>`;
+    const NO_SHOPS_SVG = `<svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.6" fill="currentColor"/><circle cx="17" cy="20" r="1.6" fill="currentColor"/><path d="M2 3h3.2l2.2 11a1.8 1.8 0 0 0 1.8 1.4h8.1a1.8 1.8 0 0 0 1.7-1.3L21 6.5H6"/><line x1="3" y1="3" x2="21" y2="21" stroke="#cccccc" stroke-width="4.4"/><line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.4"/></svg>`;
 
     function getDaySpecialStatus(isoDateStr) {
       const [year, month, day] = isoDateStr.split('-').map(Number);
@@ -833,7 +843,7 @@
       const badges = [];
       if (special.noKita) {
         const kitaClass = special.isRoutineWeekendKita ? 'event-badge-kita-weekend' : 'event-badge-kita';
-        const kitaIcon = renderNoKitaSvg(special.isRoutineWeekendKita ? '#dcdfe4' : '#000000');
+        const kitaIcon = renderNoKitaSvg(special.isRoutineWeekendKita ? '#cccccc' : '#000000');
         badges.push(`<span class="event-badge ${kitaClass}">${kitaIcon}<span>No Kita</span></span>`);
       }
       if (special.noShops) {
@@ -924,14 +934,14 @@
 
         case 'partly-cloudy-night':
           return `<svg ${common}>
-            <path d="M26.5 9.5C23.8 8.8 20.9 9.1 18.3 10.4C11.9 13.5 9.2 21.2 12.3 27.6C14.1 31.3 17.4 33.8 21.2 34.6C17.8 31.4 16.9 26.2 19.1 21.8C21.1 17.8 25.1 15.5 29.5 15.7C28.8 13.2 27.7 11.1 26.5 9.5Z" fill="#dadce0" stroke="#000000" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M26.5 9.5C23.8 8.8 20.9 9.1 18.3 10.4C11.9 13.5 9.2 21.2 12.3 27.6C14.1 31.3 17.4 33.8 21.2 34.6C17.8 31.4 16.9 26.2 19.1 21.8C21.1 17.8 25.1 15.5 29.5 15.7C28.8 13.2 27.7 11.1 26.5 9.5Z" fill="#cccccc" stroke="#000000" stroke-width="3" stroke-linejoin="round"/>
             <path d="M44 12L45 14.5L47.5 15.5L45 16.5L44 19L43 16.5L40.5 15.5L43 14.5L44 12Z" fill="#000000"/>
             <path d="M22 50H46C51.5 50 56 45.5 56 40C56 34.8 52 30.6 47 30.1C45.5 22.9 39.1 17.5 31.4 17.5C22.6 17.5 15.5 24.6 15.5 33.4C15.5 33.9 15.5 34.5 15.6 35C11.8 36.1 9 39.5 9 43.6C9 47.8 12.5 50 17 50H22Z" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
           </svg>`;
 
         case 'overcast':
           return `<svg ${common}>
-            <path d="M26 38H49C53.4 38 57 34.4 57 30C57 25.8 53.8 22.4 49.7 22C48.5 16.3 43.4 12 37.3 12C30.3 12 24.6 17.7 24.6 24.7" fill="#dadce0" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M26 38H49C53.4 38 57 34.4 57 30C57 25.8 53.8 22.4 49.7 22C48.5 16.3 43.4 12 37.3 12C30.3 12 24.6 17.7 24.6 24.7" fill="#cccccc" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M18 49H44C49.5 49 54 44.5 54 39C54 33.8 50 29.6 45 29.1C43.5 21.9 37.1 16.5 29.4 16.5C20.6 16.5 13.5 23.6 13.5 32.4C13.5 32.9 13.5 33.5 13.6 34C9.8 35.1 7 38.5 7 42.6C7 46.8 10.5 49 15 49H18Z" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
           </svg>`;
 
@@ -966,7 +976,7 @@
 
         case 'heavy-rain':
           return `<svg ${common}>
-            <path d="${cloudPath}" fill="#dadce0" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+            <path d="${cloudPath}" fill="#cccccc" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
             <g stroke="#000000" stroke-width="3.6" stroke-linecap="round">
               <line x1="19" y1="49" x2="14" y2="60"/>
               <line x1="29" y1="49" x2="24" y2="60"/>
@@ -987,7 +997,7 @@
 
         case 'thunderstorm':
           return `<svg ${common}>
-            <path d="${cloudPath}" fill="#dadce0" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+            <path d="${cloudPath}" fill="#cccccc" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
             <polygon points="33,38 24,51 32,51 29,61 42,47 34,47" fill="#000000" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
           </svg>`;
 
@@ -1233,7 +1243,7 @@
       const W = 528;
       const H = 368;
       const stepX = 19; // 24 intervals * 19px = 456px
-      const xStart = 40; // x(0)=40 .. x(24)=496 (room on left for 100%/50% scale labels)
+      const xStart = 38; // x(0)=38 .. x(24)=494 (balanced margins for left % and right mm scale labels)
       const xOf = (k) => xStart + k * stepX;
       const xAxisLeft = xStart - 9;
       const xAxisRight = xOf(points.length - 1) + 9;
@@ -1247,12 +1257,14 @@
       const spanT = Math.max(maxT - minT, 4);
       const yOfTemp = (t) => Math.round(yTempBot - ((t - minT) / spanT) * (yTempBot - yTempTop));
 
-      // Tall Precipitation track: y in [196 .. 336] (height 140px — 84% taller for crisp E-Ink legibility)
+      // Tall Precipitation track: y in [196 .. 336] (height 140px)
+      // Fixed scale: 2.0mm = 100% of track height (1.0mm = 50%). Higher rain overflows above the 100% line!
       const yPrecipTop = 196;
       const yPrecipBase = 336;
       const yPrecipMid = Math.round((yPrecipTop + yPrecipBase) / 2);
       const precipTrackH = yPrecipBase - yPrecipTop; // 140px
-      const maxMmScale = Math.max(2.0, ...points.map((p) => p.mm));
+      const FIXED_MM_SCALE = 2.0;
+      const maxBarHeight = yPrecipBase - 6; // Ceiling just inside top edge of SVG for extreme cloudbursts
 
       const parts = [];
 
@@ -1261,7 +1273,7 @@
         if (p.hourNum === 0 && p.k > 0) {
           const x = xOf(p.k);
           parts.push(
-            `<line x1="${x}" y1="32" x2="${x}" y2="${yPrecipBase}" stroke="#888888" stroke-width="1.3" stroke-dasharray="4 4" />`
+            `<line x1="${x}" y1="32" x2="${x}" y2="${yPrecipBase}" stroke="#666666" stroke-width="1.5" stroke-dasharray="4 4" />`
           );
         }
       }
@@ -1283,9 +1295,9 @@
       const lastX = tempCoords[tempCoords.length - 1][0];
       const areaPoints = `${firstX},${yTempBot + 10} ${polyPoints} ${lastX},${yTempBot + 10}`;
 
-      parts.push(`<polygon points="${areaPoints}" fill="#e2e5e9" />`);
+      parts.push(`<polygon points="${areaPoints}" fill="#cccccc" />`);
       parts.push(
-        `<polyline points="${polyPoints}" fill="none" stroke="#000000" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />`
+        `<polyline points="${polyPoints}" fill="none" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`
       );
 
       for (const p of points) {
@@ -1297,48 +1309,32 @@
             `<circle cx="${x}" cy="${y}" r="4.2" fill="${fill}" stroke="#000000" stroke-width="2.4" />`
           );
           parts.push(
-            `<text x="${x}" y="${y - 10}" text-anchor="middle" font-family="Inter, sans-serif" font-size="13.5" font-weight="800" fill="#000000">${Math.round(p.temp)}°</text>`
+            `<text x="${x}" y="${y - 10}" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="800" fill="#000000">${Math.round(p.temp)}°</text>`
           );
         }
       }
 
-      // 3b. Day-boundary weekday pill (e.g. "THU →") in the open channel along the 00:00 divider
-      for (const p of points) {
-        if (p.hourNum === 0 && p.k > 0) {
-          const x = xOf(p.k);
-          const [yy, mm, dd] = p.dateStr.split('-').map(Number);
-          const dayShort = new Intl.DateTimeFormat('en-US', {
-            weekday: 'short',
-            timeZone: 'UTC'
-          })
-            .format(new Date(Date.UTC(yy, mm - 1, dd, 12, 0, 0)))
-            .toUpperCase();
-          const pillW = 44;
-          const pillX = Math.min(Math.max(x - pillW / 2, xAxisLeft), xAxisRight - pillW);
-          parts.push(
-            `<rect x="${pillX}" y="156" width="${pillW}" height="16" rx="4" fill="#ffffff" stroke="#000000" stroke-width="1.3" />`
-          );
-          parts.push(
-            `<text x="${pillX + pillW / 2}" y="167.5" text-anchor="middle" font-family="Inter, sans-serif" font-size="9.5" font-weight="800" letter-spacing="0.03em" fill="#000000">${dayShort} →</text>`
-          );
-        }
-      }
-
-      // 4. Precipitation guide lines (100% and 50%) with left-side scale labels
+      // 4. Precipitation guide lines (100% / 2mm and 50% / 1mm) with quantized E-Ink contrast
       parts.push(
-        `<line x1="${xAxisLeft}" y1="${yPrecipTop}" x2="${xAxisRight}" y2="${yPrecipTop}" stroke="#b8bec6" stroke-width="1.2" stroke-dasharray="3 3" />`
+        `<line x1="${xAxisLeft}" y1="${yPrecipTop}" x2="${xAxisRight}" y2="${yPrecipTop}" stroke="#777777" stroke-width="1.5" stroke-dasharray="4 4" />`
       );
       parts.push(
-        `<text x="${xAxisLeft - 5}" y="${yPrecipTop + 3.5}" text-anchor="end" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#555555">100%</text>`
+        `<text x="${xAxisLeft - 4}" y="${yPrecipTop + 4}" text-anchor="end" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">100%</text>`
       );
       parts.push(
-        `<line x1="${xAxisLeft}" y1="${yPrecipMid}" x2="${xAxisRight}" y2="${yPrecipMid}" stroke="#c6ccd3" stroke-width="1.2" stroke-dasharray="3 3" />`
+        `<text x="${xAxisRight + 4}" y="${yPrecipTop + 4}" text-anchor="start" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">2mm</text>`
       );
       parts.push(
-        `<text x="${xAxisLeft - 5}" y="${yPrecipMid + 3.5}" text-anchor="end" font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#555555">50%</text>`
+        `<line x1="${xAxisLeft}" y1="${yPrecipMid}" x2="${xAxisRight}" y2="${yPrecipMid}" stroke="#777777" stroke-width="1.5" stroke-dasharray="4 4" />`
+      );
+      parts.push(
+        `<text x="${xAxisLeft - 4}" y="${yPrecipMid + 4}" text-anchor="end" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">50%</text>`
+      );
+      parts.push(
+        `<text x="${xAxisRight + 4}" y="${yPrecipMid + 4}" text-anchor="start" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">1mm</text>`
       );
 
-      // 5. Hourly Precipitation Bars (Light-gray = Probability %, Solid black = Amount mm)
+      // 5. Hourly Precipitation Bars (Quantized gray #bbbbbb = Probability %, Solid black = Amount mm on fixed 2mm scale, overflowing if > 2mm)
       const barW = 13;
       for (const p of points) {
         const x = xOf(p.k);
@@ -1349,13 +1345,13 @@
           const hProb = Math.max(4, Math.round((p.prob / 100) * precipTrackH));
           const yProb = yPrecipBase - hProb;
           parts.push(
-            `<rect x="${barLeft}" y="${yProb}" width="${barW}" height="${hProb}" rx="3" fill="#cfd4da" stroke="#000000" stroke-width="1.4" />`
+            `<rect x="${barLeft}" y="${yProb}" width="${barW}" height="${hProb}" rx="3" fill="#bbbbbb" stroke="#000000" stroke-width="1.5" />`
           );
         }
 
-        // Rain amount bar (mm) overlaid in solid black from base
+        // Rain amount bar (mm) overlaid in solid black from base — fixed 2.0mm scale, allowed to overflow above 100% line
         if (p.mm > 0) {
-          const hMm = Math.max(5, Math.round(Math.min(p.mm / maxMmScale, 1) * precipTrackH));
+          const hMm = Math.min(maxBarHeight, Math.max(5, Math.round((p.mm / FIXED_MM_SCALE) * precipTrackH)));
           const yMm = yPrecipBase - hMm;
           parts.push(
             `<rect x="${barLeft}" y="${yMm}" width="${barW}" height="${hMm}" rx="2.5" fill="#000000" />`
@@ -1363,12 +1359,12 @@
         }
       }
 
-      // 6. Non-overlapping Precipitation Peak Callout Labels (% and mm) at true local crests
+      // 6. Non-overlapping Precipitation Peak Callout Labels (% and mm) at true local crests with background knockout halo
       const barHeightAt = (idx) => {
         if (idx < 0 || idx >= points.length) return 0;
         const pt = points[idx];
         const hp = pt.prob > 0 ? Math.max(4, Math.round((pt.prob / 100) * precipTrackH)) : 0;
-        const hm = pt.mm > 0 ? Math.max(5, Math.round(Math.min(pt.mm / maxMmScale, 1) * precipTrackH)) : 0;
+        const hm = pt.mm > 0 ? Math.min(maxBarHeight, Math.max(5, Math.round((pt.mm / FIXED_MM_SCALE) * precipTrackH))) : 0;
         return Math.max(hp, hm);
       };
 
@@ -1391,28 +1387,29 @@
         }
       }
 
+      const haloAttrs = 'paint-order="stroke" stroke="#eeeeee" stroke-width="4" stroke-linejoin="round"';
       for (const best of chosenPeaks) {
         const x = xOf(best.k);
         const clearH = Math.max(barHeightAt(best.k), barHeightAt(best.k - 1), barHeightAt(best.k + 1));
-        const barTop = yPrecipBase - clearH;
+        const barTop = Math.max(24, yPrecipBase - clearH);
 
         if (best.mm >= 0.1) {
           parts.push(
-            `<text x="${x}" y="${barTop - 17}" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#000000">${best.prob}%</text>`
+            `<text x="${x}" y="${barTop - 17}" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#000000" ${haloAttrs}>${best.prob}%</text>`
           );
           parts.push(
-            `<text x="${x}" y="${barTop - 4}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#111111">${best.mm.toFixed(1)}mm</text>`
+            `<text x="${x}" y="${barTop - 4}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#111111" ${haloAttrs}>${best.mm.toFixed(1)}mm</text>`
           );
         } else {
           parts.push(
-            `<text x="${x}" y="${barTop - 5}" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#000000">${best.prob}%</text>`
+            `<text x="${x}" y="${barTop - 5}" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#000000" ${haloAttrs}>${best.prob}%</text>`
           );
         }
       }
 
       // 7. Bottom X-Axis Line, 1-hour ticks, and 3-hour clock labels
       parts.push(
-        `<line x1="${xAxisLeft}" y1="${yPrecipBase}" x2="${xAxisRight}" y2="${yPrecipBase}" stroke="#000000" stroke-width="1.8" />`
+        `<line x1="${xAxisLeft}" y1="${yPrecipBase}" x2="${xAxisRight}" y2="${yPrecipBase}" stroke="#000000" stroke-width="2" />`
       );
 
       for (const p of points) {
@@ -1420,7 +1417,7 @@
         const isMajor = p.k % 3 === 0;
         const tickLen = isMajor ? 6 : 3;
         parts.push(
-          `<line x1="${x}" y1="${yPrecipBase}" x2="${x}" y2="${yPrecipBase + tickLen}" stroke="#000000" stroke-width="${isMajor ? 1.8 : 1.2}" />`
+          `<line x1="${x}" y1="${yPrecipBase}" x2="${x}" y2="${yPrecipBase + tickLen}" stroke="#000000" stroke-width="${isMajor ? 2 : 1.5}" />`
         );
         if (isMajor) {
           parts.push(
@@ -1569,7 +1566,7 @@
           </svg>`;
         } else {
           document.getElementById('hero-precip-icon').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#f1f3f4" />
+            <path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#eeeeee" />
             <path d="M12 12v7a2 2 0 0 0 4 0" />
             <path d="M12 2v1" />
             ${precipToday.noPrecipExpected ? '<line x1="3" y1="3" x2="21" y2="21" stroke="#ffffff" stroke-width="5" /><line x1="3" y1="3" x2="21" y2="21" stroke="#000000" stroke-width="2.4" />' : ''}
@@ -1582,7 +1579,8 @@
         document.getElementById('hero-uv-label').textContent = isEveningTomorrowShift ? 'UV (Tom.)' : 'UV Index';
         document.getElementById('hero-uv').innerHTML = formatUvMetric(uvTargetVal);
 
-        // Wind in knots (kn) — displayed ONLY when wind is unusually strong (>= 15 kn current or >= 18 kn daily max)
+        // Wind in knots (kn) — always paired alongside UV Index for consistent 2x2 grid;
+        // highlights with inverted alert styling when wind is strong (>= 15 kn current or >= 18 kn daily max)
         const STRONG_WIND_CURRENT_KN = 15;
         const STRONG_WIND_DAILY_MAX_KN = 18;
         const currentWindKn = Number(current.wind_speed_10m ?? 0);
@@ -1591,17 +1589,17 @@
           currentWindKn >= STRONG_WIND_CURRENT_KN || todayMaxWindKn >= STRONG_WIND_DAILY_MAX_KN;
 
         const windBoxEl = document.getElementById('hero-wind-box');
-        const uvBoxEl = document.getElementById('hero-uv-box');
         if (isStrongWind) {
-          windBoxEl.style.display = '';
-          uvBoxEl.classList.remove('metric-box-full');
+          windBoxEl.classList.add('metric-box-alert');
           const showCurrent = currentWindKn >= STRONG_WIND_CURRENT_KN;
           const windKnVal = Math.round(showCurrent ? currentWindKn : todayMaxWindKn);
           document.getElementById('hero-wind-label').textContent = showCurrent ? 'Strong Wind' : 'Peak Wind';
           document.getElementById('hero-wind').textContent = `${windKnVal} kn`;
         } else {
-          windBoxEl.style.display = 'none';
-          uvBoxEl.classList.add('metric-box-full');
+          windBoxEl.classList.remove('metric-box-alert');
+          const windKnVal = Math.round(currentWindKn);
+          document.getElementById('hero-wind-label').textContent = 'Wind';
+          document.getElementById('hero-wind').textContent = `${windKnVal} kn`;
         }
 
         const sunriseRaw = data.daily.sunrise?.[0] || '';
@@ -1614,7 +1612,7 @@
 
         // 3. Bottom Right: Next 3 Days Forecast (indices 1, 2, 3)
         const UMBRELLA_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#000000"/><path d="M12 12v7a2 2 0 0 0 4 0"/><path d="M12 2v1"/></svg>`;
-        const UMBRELLA_OFF_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#f1f3f4"/><path d="M12 12v7a2 2 0 0 0 4 0"/><path d="M12 2v1"/><line x1="2.5" y1="2.5" x2="21.5" y2="21.5" stroke="#ffffff" stroke-width="5"/><line x1="2.5" y1="2.5" x2="21.5" y2="21.5" stroke="#000000" stroke-width="2.6"/></svg>`;
+        const UMBRELLA_OFF_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#eeeeee"/><path d="M12 12v7a2 2 0 0 0 4 0"/><path d="M12 2v1"/><line x1="2.5" y1="2.5" x2="21.5" y2="21.5" stroke="#ffffff" stroke-width="5"/><line x1="2.5" y1="2.5" x2="21.5" y2="21.5" stroke="#000000" stroke-width="2.6"/></svg>`;
         const dailyContainer = document.getElementById('daily-list');
         const nextThreeDaysHtml = [];
         for (let i = 1; i <= 3; i++) {
