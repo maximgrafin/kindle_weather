@@ -5,9 +5,8 @@ on:
     branches:
       - main
   schedule:
-    # Runs every 5 minutes (maximum frequency allowed by GitHub Actions, 12 slots/hour)
-    # so that even when GitHub drops most cron events, slots still make it through.
-    - cron: '*/5 * * * *'
+    # Fallback schedule (37 minutes past the hour); primary trigger is workflow_dispatch.
+    - cron: '37 * * * *'
   workflow_dispatch:
 
 concurrency:
@@ -45,18 +44,18 @@ jobs:
           npm install --no-package-lock --registry=https://registry.npmjs.org/
           npx puppeteer browsers install chrome
 
-      - name: Render weather.png (1024x758)
+      - name: Render weather images (0°, 90°, 180°, 270°)
         run: node render.js
 
       - name: Prepare publish directory
         run: |
           mkdir -p dist
-          cp weather.png dist/weather.png
+          cp weather.png weather-90.png weather-180.png weather-270.png dist/
 
-      - name: Deploy weather.png to GitHub Pages (gh-pages)
+      - name: Deploy weather images to GitHub Pages (gh-pages)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           force_orphan: true
-          commit_message: 'chore: update weather.png'
+          commit_message: 'chore: update weather images'
