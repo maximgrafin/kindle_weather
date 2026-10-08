@@ -469,7 +469,7 @@
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .daily-right-stack {
@@ -488,6 +488,7 @@
       padding: 0 8px;
       font-size: 12px;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
       color: var(--ink-black);
       display: inline-flex;
       align-items: center;
@@ -1069,7 +1070,7 @@
       }
 
       let maxProb = 0;
-      let totalMm = 0;
+      let maxMm = 0;
       let peakHour = hoursSlice[0].hour;
       let hasSnow = false;
       let hasSleet = false;
@@ -1080,7 +1081,9 @@
           maxProb = h.prob;
           peakHour = h.hour;
         }
-        totalMm += h.precip;
+        if (h.precip > maxMm) {
+          maxMm = h.precip;
+        }
         const isSnowHour = h.snow > 0 || SNOW_CODES.has(h.code);
         const isSleetHour = SLEET_CODES.has(h.code);
         const isRainHour = RAIN_CODES.has(h.code);
@@ -1145,7 +1148,7 @@
         scheduleText = `No ${kind.toLowerCase()} expected`;
       }
 
-      const mmText = totalMm >= 0.1 ? ` (${totalMm.toFixed(1)} mm)` : '';
+      const mmText = maxMm >= 0.1 ? ` (max ${maxMm.toFixed(1)} mm/h)` : '';
 
       return {
         isSnow,
@@ -1258,13 +1261,16 @@
       const yOfTemp = (t) => Math.round(yTempBot - ((t - minT) / spanT) * (yTempBot - yTempTop));
 
       // Tall Precipitation track: y in [196 .. 336] (height 140px)
-      // Fixed scale: 2.0mm = 100% of track height (1.0mm = 50%). Higher rain overflows above the 100% line!
+      // Fixed square-root scale (Option B): 1.0mm = 50% line, 4.0mm = 100% line (height = sqrt(mm / 4) * 140px).
+      // Heavy downpours (> 4.0mm/h) overflow above the 100% line to warn at a single glance.
       const yPrecipTop = 196;
       const yPrecipBase = 336;
       const yPrecipMid = Math.round((yPrecipTop + yPrecipBase) / 2);
       const precipTrackH = yPrecipBase - yPrecipTop; // 140px
-      const FIXED_MM_SCALE = 2.0;
+      const FIXED_MM_SCALE = 4.0;
       const maxBarHeight = yPrecipBase - 6; // Ceiling just inside top edge of SVG for extreme cloudbursts
+      const mmToHeight = (mm) =>
+        mm > 0 ? Math.min(maxBarHeight, Math.max(5, Math.round(Math.sqrt(mm / FIXED_MM_SCALE) * precipTrackH))) : 0;
 
       const parts = [];
 
@@ -1314,7 +1320,7 @@
         }
       }
 
-      // 4. Precipitation guide lines (100% / 2mm and 50% / 1mm) with quantized E-Ink contrast
+      // 4. Precipitation guide lines (100% / 4mm and 50% / 1mm) with quantized E-Ink contrast
       parts.push(
         `<line x1="${xAxisLeft}" y1="${yPrecipTop}" x2="${xAxisRight}" y2="${yPrecipTop}" stroke="#777777" stroke-width="1.5" stroke-dasharray="4 4" />`
       );
@@ -1322,7 +1328,7 @@
         `<text x="${xAxisLeft - 4}" y="${yPrecipTop + 4}" text-anchor="end" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">100%</text>`
       );
       parts.push(
-        `<text x="${xAxisRight + 4}" y="${yPrecipTop + 4}" text-anchor="start" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">2mm</text>`
+        `<text x="${xAxisRight + 4}" y="${yPrecipTop + 4}" text-anchor="start" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">4mm</text>`
       );
       parts.push(
         `<line x1="${xAxisLeft}" y1="${yPrecipMid}" x2="${xAxisRight}" y2="${yPrecipMid}" stroke="#777777" stroke-width="1.5" stroke-dasharray="4 4" />`
@@ -1334,7 +1340,7 @@
         `<text x="${xAxisRight + 4}" y="${yPrecipMid + 4}" text-anchor="start" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">1mm</text>`
       );
 
-      // 5. Hourly Precipitation Bars (Quantized gray #bbbbbb = Probability %, Solid black = Amount mm on fixed 2mm scale, overflowing if > 2mm)
+      // 5. Hourly Precipitation Bars (Quantized gray #bbbbbb = Probability %, Solid black = Amount mm on fixed sqrt(mm/4) scale, overflowing if > 4mm)
       const barW = 13;
       for (const p of points) {
         const x = xOf(p.k);
@@ -1349,9 +1355,9 @@
           );
         }
 
-        // Rain amount bar (mm) overlaid in solid black from base — fixed 2.0mm scale, allowed to overflow above 100% line
+        // Rain amount bar (mm) overlaid in solid black from base — fixed sqrt(mm/4) scale, allowed to overflow above 100% line
         if (p.mm > 0) {
-          const hMm = Math.min(maxBarHeight, Math.max(5, Math.round((p.mm / FIXED_MM_SCALE) * precipTrackH)));
+          const hMm = mmToHeight(p.mm);
           const yMm = yPrecipBase - hMm;
           parts.push(
             `<rect x="${barLeft}" y="${yMm}" width="${barW}" height="${hMm}" rx="2.5" fill="#000000" />`
@@ -1364,7 +1370,7 @@
         if (idx < 0 || idx >= points.length) return 0;
         const pt = points[idx];
         const hp = pt.prob > 0 ? Math.max(4, Math.round((pt.prob / 100) * precipTrackH)) : 0;
-        const hm = pt.mm > 0 ? Math.min(maxBarHeight, Math.max(5, Math.round((pt.mm / FIXED_MM_SCALE) * precipTrackH))) : 0;
+        const hm = mmToHeight(pt.mm);
         return Math.max(hp, hm);
       };
 
@@ -1527,6 +1533,28 @@
           data.current.wind_speed_10m = Number(rawTestWind);
         }
 
+        // Optional demo mode (?demo=heavy-rain) to preview light, moderate, 4mm, and >4mm overflowing storm bars
+        const demoMode = (urlParams.get('demo') || '').trim();
+        if (demoMode === 'heavy-rain') {
+          const curPrefix = data.current.time.slice(0, 13);
+          let sIdx = data.hourly.time.findIndex((t) => t.slice(0, 13) >= curPrefix);
+          if (sIdx < 0) sIdx = 0;
+          // 25-hour synthetic profile:
+          // Wave 1 (k=1..5): light/steady rain peaking at 1.0mm (exact 50% line) and 2.0mm
+          // Wave 2 (k=9..15): heavy storm peaking at 4.0mm (100% line) and 7.2mm (overflowing above 100%!)
+          // Wave 3 (k=19..22): light morning shower (0.5mm)
+          const demoProbs = [20, 65, 80, 90, 75, 45, 10, 0, 25, 75, 95, 100, 100, 90, 60, 20, 0, 0, 15, 55, 65, 40, 10, 0, 0];
+          const demoMm    = [0, 0.4, 1.0, 2.0, 0.8, 0.2, 0, 0, 0.2, 1.5, 4.0, 7.2, 5.2, 2.5, 0.6, 0, 0, 0, 0, 0.3, 0.5, 0.2, 0, 0, 0];
+          const demoCodes = [3, 61, 61, 63, 61, 51, 3, 2, 3, 63, 65, 95, 65, 63, 61, 3, 2, 1, 2, 61, 61, 51, 3, 2, 2];
+          for (let k = 0; k < 25 && sIdx + k < data.hourly.time.length; k++) {
+            data.hourly.precipitation_probability[sIdx + k] = demoProbs[k];
+            data.hourly.precipitation[sIdx + k] = demoMm[k];
+            data.hourly.weather_code[sIdx + k] = demoCodes[k];
+          }
+          data.current.weather_code = 65;
+          data.current.wind_speed_10m = 18;
+        }
+
         // 1. Hero Card (Current Weather — no redundant city header)
         const current = data.current;
         const currentHourNum = Number(current.time.slice(11, 13));
@@ -1624,9 +1652,15 @@
           const maxT = Math.round(data.daily.temperature_2m_max[i]);
           const minT = Math.round(data.daily.temperature_2m_min[i]);
           const precipMax = data.daily.precipitation_probability_max[i] ?? 0;
-          const precipSum = data.daily.precipitation_sum?.[i] ?? 0;
-          const mmBadge = precipSum >= 0.1 ? ` · ${precipSum.toFixed(1)}mm` : '';
-          const isDryDay = precipMax < 20 && precipSum < 0.1;
+          let dayPeakMm = 0;
+          for (let h = 0; h < data.hourly.time.length; h++) {
+            if (data.hourly.time[h].startsWith(dateStr)) {
+              const hm = data.hourly.precipitation?.[h] ?? 0;
+              if (hm > dayPeakMm) dayPeakMm = hm;
+            }
+          }
+          const mmBadge = dayPeakMm >= 0.1 ? ` · ${dayPeakMm.toFixed(1)}mm/h` : '';
+          const isDryDay = precipMax < 20 && dayPeakMm < 0.1;
           const pillIcon = isDryDay ? UMBRELLA_OFF_SVG : UMBRELLA_SVG;
 
           const daySpecial = getDaySpecialStatus(dateStr);
@@ -1643,7 +1677,6 @@
                 <span class="daily-sub">${monthDay} · ${holidaySub}${dayInfo.label}</span>
               </div>
               <div class="daily-right">
-                <div class="daily-icon" aria-hidden="true">${renderWeatherSvg(dayInfo.icon)}</div>
                 <div class="daily-right-stack">
                   <div class="daily-temps">
                     <span class="temp-max">${maxT}°</span>
@@ -1652,6 +1685,7 @@
                   </div>
                   <span class="precip-pill">${pillIcon}<span>${precipMax}%${mmBadge}</span></span>
                 </div>
+                <div class="daily-icon" aria-hidden="true">${renderWeatherSvg(dayInfo.icon)}</div>
               </div>
             </article>
           `);
