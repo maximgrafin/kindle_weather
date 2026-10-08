@@ -1,6 +1,9 @@
 name: Render & Deploy Kindle Weather Widget
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     # Runs every 1 hour at minute 37 (off-peak, slightly after :30 so even with GitHub
     # queue lag it finishes well before :00 when the Kindle fetches weather.png).
