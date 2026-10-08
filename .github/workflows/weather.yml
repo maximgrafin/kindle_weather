@@ -5,14 +5,9 @@ on:
     branches:
       - main
   schedule:
-    # 6 irregular off-peak points per hour (avoiding :00/:15/:30/:45 and multiples of 5)
-    # to maximize reliability against GitHub Actions dropped cron slots.
-    - cron: '7 * * * *'
-    - cron: '16 * * * *'
-    - cron: '27 * * * *'
-    - cron: '37 * * * *'
-    - cron: '46 * * * *'
-    - cron: '54 * * * *'
+    # Runs every 5 minutes (maximum frequency allowed by GitHub Actions, 12 slots/hour)
+    # so that even when GitHub drops most cron events, slots still make it through.
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 concurrency:
