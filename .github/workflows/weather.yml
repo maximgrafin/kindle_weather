@@ -2,9 +2,9 @@ name: Render & Deploy Kindle Weather Widget
 
 on:
   schedule:
-    # Runs every 1 hour at minute 52 (off-peak minute to avoid GitHub Actions :00/:30 queue drops).
-    # Ready just before the top of every hour.
-    - cron: '52 * * * *'
+    # Runs every 1 hour at minute 37 (off-peak, slightly after :30 so even with GitHub
+    # queue lag it finishes well before :00 when the Kindle fetches weather.png).
+    - cron: '37 * * * *'
   workflow_dispatch:
 
 permissions:
