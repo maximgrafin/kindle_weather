@@ -5,10 +5,19 @@ on:
     branches:
       - main
   schedule:
-    # Runs every 1 hour at minute 37 (off-peak, slightly after :30 so even with GitHub
-    # queue lag it finishes well before :00 when the Kindle fetches weather.png).
+    # 6 irregular off-peak points per hour (avoiding :00/:15/:30/:45 and multiples of 5)
+    # to maximize reliability against GitHub Actions dropped cron slots.
+    - cron: '7 * * * *'
+    - cron: '16 * * * *'
+    - cron: '27 * * * *'
     - cron: '37 * * * *'
+    - cron: '46 * * * *'
+    - cron: '54 * * * *'
   workflow_dispatch:
+
+concurrency:
+  group: weather-deploy
+  cancel-in-progress: false
 
 permissions:
   contents: write
