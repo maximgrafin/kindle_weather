@@ -4,8 +4,8 @@ const { pathToFileURL } = require('url');
 const puppeteer = require('puppeteer');
 
 const VIEWPORT = {
-  width: 1024,
-  height: 758,
+  width: 1448,
+  height: 1072,
   deviceScaleFactor: 1,
 };
 
