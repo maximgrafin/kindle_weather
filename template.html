@@ -737,7 +737,7 @@
           <path
             d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
         </svg>
-        by Maxim Sadym
+        by gr4f1n
       </span>
     </footer>
   </div>
@@ -1545,7 +1545,7 @@
           // Wave 2 (k=9..15): heavy storm peaking at 4.0mm (100% line) and 7.2mm (overflowing above 100%!)
           // Wave 3 (k=19..22): light morning shower (0.5mm)
           const demoProbs = [20, 65, 80, 90, 75, 45, 10, 0, 25, 75, 95, 100, 100, 90, 60, 20, 0, 0, 15, 55, 65, 40, 10, 0, 0];
-          const demoMm    = [0, 0.4, 1.0, 2.0, 0.8, 0.2, 0, 0, 0.2, 1.5, 4.0, 7.2, 5.2, 2.5, 0.6, 0, 0, 0, 0, 0.3, 0.5, 0.2, 0, 0, 0];
+          const demoMm = [0, 0.4, 1.0, 2.0, 0.8, 0.2, 0, 0, 0.2, 1.5, 4.0, 7.2, 5.2, 2.5, 0.6, 0, 0, 0, 0, 0.3, 0.5, 0.2, 0, 0, 0];
           const demoCodes = [3, 61, 61, 63, 61, 51, 3, 2, 3, 63, 65, 95, 65, 63, 61, 3, 2, 1, 2, 61, 61, 51, 3, 2, 2];
           for (let k = 0; k < 25 && sIdx + k < data.hourly.time.length; k++) {
             data.hourly.precipitation_probability[sIdx + k] = demoProbs[k];
