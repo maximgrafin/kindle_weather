@@ -862,33 +862,33 @@
       const day = isDay !== 0;
       const map = {
         0: { label: 'Clear sky', icon: day ? 'clear-day' : 'clear-night' },
-        1: { label: 'Mainly clear', icon: day ? 'clear-day' : 'clear-night' },
+        1: { label: 'Mostly clear', icon: day ? 'clear-day' : 'clear-night' },
         2: { label: 'Partly cloudy', icon: day ? 'partly-cloudy-day' : 'partly-cloudy-night' },
-        3: { label: 'Overcast', icon: 'overcast' },
+        3: { label: 'Cloudy', icon: 'overcast' },
         45: { label: 'Foggy', icon: 'fog' },
-        48: { label: 'Rime fog', icon: 'fog' },
-        51: { label: 'Light drizzle', icon: 'drizzle' },
-        53: { label: 'Moderate drizzle', icon: 'drizzle' },
-        55: { label: 'Dense drizzle', icon: 'drizzle' },
-        56: { label: 'Freezing drizzle', icon: 'drizzle' },
-        57: { label: 'Freezing drizzle', icon: 'drizzle' },
+        48: { label: 'Freezing fog', icon: 'fog' },
+        51: { label: 'Very light rain', icon: 'drizzle' },
+        53: { label: 'Light rain', icon: 'drizzle' },
+        55: { label: 'Light rain', icon: 'drizzle' },
+        56: { label: 'Freezing rain', icon: 'drizzle' },
+        57: { label: 'Freezing rain', icon: 'drizzle' },
         61: { label: 'Light rain', icon: 'rain' },
-        63: { label: 'Moderate rain', icon: 'rain' },
+        63: { label: 'Rain', icon: 'rain' },
         65: { label: 'Heavy rain', icon: 'heavy-rain' },
         66: { label: 'Freezing rain', icon: 'rain' },
         67: { label: 'Heavy freezing rain', icon: 'heavy-rain' },
         71: { label: 'Light snow', icon: 'snow' },
-        73: { label: 'Moderate snow', icon: 'snow' },
+        73: { label: 'Snow', icon: 'snow' },
         75: { label: 'Heavy snow', icon: 'snow' },
-        77: { label: 'Snow grains', icon: 'snow' },
-        80: { label: 'Light showers', icon: 'rain' },
-        81: { label: 'Rain showers', icon: 'rain' },
-        82: { label: 'Violent showers', icon: 'heavy-rain' },
-        85: { label: 'Snow showers', icon: 'snow' },
-        86: { label: 'Heavy snow showers', icon: 'snow' },
+        77: { label: 'Light snow', icon: 'snow' },
+        80: { label: 'Light rain', icon: 'rain' },
+        81: { label: 'Rain', icon: 'rain' },
+        82: { label: 'Heavy rain', icon: 'heavy-rain' },
+        85: { label: 'Light snow', icon: 'snow' },
+        86: { label: 'Heavy snow', icon: 'snow' },
         95: { label: 'Thunderstorm', icon: 'thunderstorm' },
         96: { label: 'Storm with hail', icon: 'thunderstorm' },
-        99: { label: 'Severe hailstorm', icon: 'thunderstorm' }
+        99: { label: 'Heavy storm with hail', icon: 'thunderstorm' }
       };
       return map[code] || { label: 'Cloudy', icon: 'overcast' };
     }
@@ -1101,7 +1101,7 @@
         kind = 'Snow';
         isSnow = true;
       } else if (hasSleet) {
-        kind = 'Sleet';
+        kind = 'Freezing rain';
         isSnow = true;
       }
 
