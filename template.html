@@ -1642,6 +1642,84 @@
         // 3. Bottom Right: Next 3 Days Forecast (indices 1, 2, 3)
         const UMBRELLA_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#000000"/><path d="M12 12v7a2 2 0 0 0 4 0"/><path d="M12 2v1"/></svg>`;
         const UMBRELLA_OFF_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12a10.06 10.06 0 0 0-20 0Z" fill="#eeeeee"/><path d="M12 12v7a2 2 0 0 0 4 0"/><path d="M12 2v1"/><line x1="2.5" y1="2.5" x2="21.5" y2="21.5" stroke="#ffffff" stroke-width="5"/><line x1="2.5" y1="2.5" x2="21.5" y2="21.5" stroke="#000000" stroke-width="2.6"/></svg>`;
+        function formatDailyConditionWithTimeframe(dateStr, dayCode, dayLabel, hourly, hasHoliday) {
+          const dayHours = [];
+          for (let h = 0; h < hourly.time.length; h++) {
+            if (hourly.time[h].startsWith(dateStr)) {
+              dayHours.push({
+                hour: Number(hourly.time[h].slice(11, 13)),
+                code: hourly.weather_code?.[h] ?? 0,
+                prob: hourly.precipitation_probability?.[h] ?? 0,
+                precip: hourly.precipitation?.[h] ?? 0,
+                snow: hourly.snowfall?.[h] ?? 0
+              });
+            }
+          }
+          if (dayHours.length === 0 || dayCode <= 3) return dayLabel;
+
+          const padClock = (n) => `${String(n).padStart(2, '0')}:00`;
+          const hoursToWindow = (hrs, compact = false) => {
+            if (hrs.length === 0 || hrs.length >= 20) return '';
+            const ranges = [];
+            let start = hrs[0];
+            let prev = hrs[0];
+            for (let i = 1; i < hrs.length; i++) {
+              if (hrs[i] <= prev + 2) {
+                prev = hrs[i];
+              } else {
+                ranges.push([start, prev]);
+                start = hrs[i];
+                prev = hrs[i];
+              }
+            }
+            ranges.push([start, prev]);
+
+            const fmtRange = ([s, e]) => (s === e ? `~${padClock(s)}` : `${padClock(s)}–${padClock(e + 1)}`);
+            if (ranges.length === 1) return fmtRange(ranges[0]);
+            if (ranges.length === 2 && !compact) return `${fmtRange(ranges[0])}, ${fmtRange(ranges[1])}`;
+            // When compact is needed across multiple disjoint windows, pick the longest/main window
+            const mainRange = ranges.reduce((best, cur) => (cur[1] - cur[0] >= best[1] - best[0] ? cur : best), ranges[0]);
+            return fmtRange(mainRange);
+          };
+
+          if (dayCode === 45 || dayCode === 48) {
+            const fogHrs = dayHours.filter((h) => h.code === 45 || h.code === 48).map((h) => h.hour);
+            const win = hoursToWindow(fogHrs, hasHoliday);
+            return win ? `${dayLabel} (${win})` : dayLabel;
+          }
+
+          let wetHrs = dayHours
+            .filter(
+              (h) =>
+                (h.prob >= 30 && (h.code >= 51 || h.precip >= 0.1 || h.snow > 0)) ||
+                (h.prob >= 50)
+            )
+            .map((h) => h.hour);
+
+          if (wetHrs.length === 0) {
+            wetHrs = dayHours
+              .filter((h) => h.prob >= 20 && (h.code >= 51 || h.precip >= 0.1 || h.snow > 0))
+              .map((h) => h.hour);
+          }
+          if (wetHrs.length === 0) {
+            wetHrs = dayHours.filter((h) => h.code >= 51 && h.prob >= 15).map((h) => h.hour);
+          }
+
+          if (dayCode >= 95) {
+            const stormHrs = dayHours.filter((h) => h.code >= 95).map((h) => h.hour);
+            const stormWin = hoursToWindow(stormHrs, true);
+            const wetWin = hoursToWindow(wetHrs, true);
+            if (stormWin && wetWin && stormWin !== wetWin && wetHrs.length > stormHrs.length + 1 && !hasHoliday) {
+              return `${dayLabel} ${stormWin} · Rain ${wetWin}`;
+            }
+            const win = stormWin || wetWin;
+            return win ? `${dayLabel} (${win})` : dayLabel;
+          }
+
+          const wetWin = hoursToWindow(wetHrs, hasHoliday);
+          return wetWin ? `${dayLabel} (${wetWin})` : dayLabel;
+        }
+
         const dailyContainer = document.getElementById('daily-list');
         const nextThreeDaysHtml = [];
         for (let i = 1; i <= 3; i++) {
@@ -1667,6 +1745,13 @@
           const daySpecial = getDaySpecialStatus(dateStr);
           const dayBadges = renderDayBadges(daySpecial, false);
           const holidaySub = daySpecial.holiday ? `<strong>${daySpecial.holiday}</strong> · ` : '';
+          const conditionWithTime = formatDailyConditionWithTimeframe(
+            dateStr,
+            dayCode,
+            dayInfo.label,
+            data.hourly,
+            Boolean(daySpecial.holiday)
+          );
 
           nextThreeDaysHtml.push(`
             <article class="daily-card">
@@ -1675,7 +1760,7 @@
                   <span class="daily-day">${weekday}</span>
                   ${dayBadges.join('')}
                 </div>
-                <span class="daily-sub">${monthDay} · ${holidaySub}${dayInfo.label}</span>
+                <span class="daily-sub">${monthDay} · ${holidaySub}${conditionWithTime}</span>
               </div>
               <div class="daily-right">
                 <div class="daily-right-stack">
