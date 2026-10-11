@@ -52,9 +52,22 @@ get_battery_percent() {
   echo "${pct:-?}"
 }
 
+battery_telemetry() {
+  cap=$(cat /sys/class/power_supply/max77696-battery/capacity 2>/dev/null | tr -dc '0-9-')
+  mah=$(cat /sys/class/power_supply/max77696-battery/charge_now 2>/dev/null | tr -dc '0-9-')
+  full=$(cat /sys/class/power_supply/max77696-battery/charge_full 2>/dev/null | tr -dc '0-9-')
+  mv=$(cat /sys/class/power_supply/max77696-battery/voltage_now 2>/dev/null | tr -dc '0-9-')
+  cur=$(cat /sys/class/power_supply/max77696-battery/current_now 2>/dev/null | tr -dc '0-9-')
+  avg=$(cat /sys/class/power_supply/max77696-battery/current_avg 2>/dev/null | tr -dc '0-9-')
+  st=$(cat /sys/class/power_supply/max77696-battery/status 2>/dev/null | tr -d '\n')
+  chg=$(cat /sys/class/power_supply/max77696-charger/present 2>/dev/null | tr -dc '0-9')
+  echo "cap=${cap:-?}% mah=${mah:-?}/${full:-?} mv=${mv:-?} cur=${cur:-?}mA avg=${avg:-?}mA status=${st:-?} chg=${chg:-?}"
+}
+
 download_weather_image() {
   url_with_ts="${IMG_URL}?ts=$(date +%s)"
   rm -f "$TMP_PATH"
+  dl_t0=$(date +%s)
 
   if command -v curl >/dev/null 2>&1; then
     curl -k -fsSL --connect-timeout 15 --max-time 30 "$url_with_ts" -o "$TMP_PATH" 2>/dev/null
@@ -65,18 +78,21 @@ download_weather_image() {
     return 1
   fi
 
+  dl_t1=$(date +%s)
+  dl_secs=$((dl_t1 - dl_t0))
+
   # Verify downloaded file exists and is at least 10 KB (valid PNG)
   if [ -s "$TMP_PATH" ]; then
     file_size=$(wc -c < "$TMP_PATH" | tr -dc '0-9')
     if [ "${file_size:-0}" -gt 10000 ]; then
       mv -f "$TMP_PATH" "$IMG_PATH"
-      log "Downloaded fresh weather-90.png (${file_size} bytes)"
+      log "Downloaded fresh weather-90.png (${file_size} bytes in ${dl_secs}s)"
       return 0
     fi
   fi
 
   rm -f "$TMP_PATH"
-  log "WARN: Download failed or incomplete; keeping previous image if available"
+  log "WARN: Download failed or incomplete after ${dl_secs}s; keeping previous image if available"
   return 1
 }
 
@@ -174,7 +190,7 @@ render_screen() {
     eips 0 2 "$status_code"
   fi
 
-  log "Rendered weather-90.png with status ${status_code} (battery ${batt}%, time ${hhmm})"
+  log "Rendered weather-90.png with status ${status_code} (battery ${batt}%, time ${hhmm}) | $(battery_telemetry)"
 }
 
 download_weather_image

@@ -20,9 +20,9 @@ UNPLUG_GRACE_SECONDS=300
 mkdir -p "$WEATHER_DIR"
 
 log() {
-  # Keep log file around 1000 lines so it provides plenty of history without filling storage
-  if [ -f "$LOG_FILE" ] && [ "$(wc -l < "$LOG_FILE" | tr -dc '0-9')" -gt 1200 ]; then
-    tail -n 1000 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv -f "${LOG_FILE}.tmp" "$LOG_FILE"
+  # Cap log file at ~10 MB (10,485,760 bytes), keeping the most recent 100,000 lines (~8 MB)
+  if [ -f "$LOG_FILE" ] && [ "$(wc -c < "$LOG_FILE" | tr -dc '0-9')" -gt 10485760 ]; then
+    tail -n 100000 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv -f "${LOG_FILE}.tmp" "$LOG_FILE"
   fi
   echo "$(date '+%Y-%m-%d %H:%M:%S') [weather_loop] $*" >> "$LOG_FILE"
 }
@@ -127,12 +127,24 @@ seconds_until_next_hour() {
   echo "$rem"
 }
 
+battery_telemetry() {
+  cap=$(cat /sys/class/power_supply/max77696-battery/capacity 2>/dev/null | tr -dc '0-9-')
+  mah=$(cat /sys/class/power_supply/max77696-battery/charge_now 2>/dev/null | tr -dc '0-9-')
+  full=$(cat /sys/class/power_supply/max77696-battery/charge_full 2>/dev/null | tr -dc '0-9-')
+  mv=$(cat /sys/class/power_supply/max77696-battery/voltage_now 2>/dev/null | tr -dc '0-9-')
+  cur=$(cat /sys/class/power_supply/max77696-battery/current_now 2>/dev/null | tr -dc '0-9-')
+  avg=$(cat /sys/class/power_supply/max77696-battery/current_avg 2>/dev/null | tr -dc '0-9-')
+  st=$(cat /sys/class/power_supply/max77696-battery/status 2>/dev/null | tr -d '\n')
+  chg=$(cat /sys/class/power_supply/max77696-charger/present 2>/dev/null | tr -dc '0-9')
+  echo "cap=${cap:-?}% mah=${mah:-?}/${full:-?} mv=${mv:-?} cur=${cur:-?}mA avg=${avg:-?}mA status=${st:-?} chg=${chg:-?}"
+}
+
 # Global set by rtc_deep_sleep: 0 if kernel suspend succeeded, non-zero otherwise
 LAST_SUSPEND_RC=0
 
 rtc_deep_sleep() {
   sleep_secs="$1"
-  log "Entering deep sleep for ${sleep_secs}s (until next :00)"
+  log "Entering deep sleep for ${sleep_secs}s (until next :00) | $(battery_telemetry)"
 
   # Sync filesystems before suspend
   sync
@@ -169,13 +181,13 @@ rtc_deep_sleep() {
       return 0
     fi
 
-    log "WARN: Suspend attempt ${attempt}/3 returned rc=${LAST_SUSPEND_RC} after ${elapsed_sleep}s; retrying in 3s..."
+    log "WARN: Suspend attempt ${attempt}/3 returned rc=${LAST_SUSPEND_RC} after ${elapsed_sleep}s; retrying in 3s... | $(battery_telemetry)"
     disable_wifi
     sleep 3
     attempt=$((attempt + 1))
   done
 
-  log "ERROR: Kernel suspend failed after 3 attempts; falling back to sleep 60s before retrying"
+  log "ERROR: Kernel suspend failed after 3 attempts; falling back to sleep 60s before retrying | $(battery_telemetry)"
   sleep 60
   return 1
 }
@@ -194,7 +206,7 @@ kill_existing_loop() {
 }
 
 stop_loop_and_restore_ui() {
-  log "Stopping weather_loop and restoring Kindle UI..."
+  log "Stopping weather_loop and restoring Kindle UI... | $(battery_telemetry)"
   kill_existing_loop
   enable_wifi
   start powerd 2>/dev/null || /etc/init.d/powerd start 2>/dev/null || true
@@ -212,7 +224,7 @@ echo "$$" > "$PID_FILE"
 trap '' HUP
 trap 'rm -f "$PID_FILE"; exit 0' INT TERM EXIT
 
-log "Starting Kindle Weather Loop (PID $$)"
+log "Starting Kindle Weather Loop (PID $$) | $(battery_telemetry)"
 
 # 1. Turn off frontlight & stop native UI/powerd so lockscreen never overwrites screen
 turn_off_frontlight
@@ -237,7 +249,7 @@ while true; do
   if is_charging; then
     # Charger is plugged in: keep Wi-Fi ON for SSH and stay awake
     if [ "$unplug_elapsed" -gt 0 ]; then
-      log "Charger re-attached; canceling sleep timer and keeping Wi-Fi on"
+      log "Charger re-attached; canceling sleep timer and keeping Wi-Fi on | $(battery_telemetry)"
     fi
     unplug_elapsed=0
     enable_wifi
@@ -249,7 +261,7 @@ while true; do
   # If we were previously awake on charger (or just booted/unplugged), wait 5 minutes before sleeping.
   if [ "$unplug_elapsed" -lt "$UNPLUG_GRACE_SECONDS" ]; then
     if [ "$unplug_elapsed" -eq 0 ]; then
-      log "On battery: waiting ${UNPLUG_GRACE_SECONDS}s (5 min) grace window before deep sleep (SSH stays active)"
+      log "On battery: waiting ${UNPLUG_GRACE_SECONDS}s (5 min) grace window before deep sleep (SSH stays active) | $(battery_telemetry)"
       enable_wifi
     fi
     sleep 5
@@ -271,16 +283,16 @@ while true; do
   # Kernel just woke up (from RTC at :00, USB charger attach, or Power button press)
   turn_off_frontlight
   if is_charging; then
-    log "Woke up because charger was connected (after ${slept_secs}s); enabling Wi-Fi and staying awake"
+    log "Woke up because charger was connected (after ${slept_secs}s); enabling Wi-Fi and staying awake | $(battery_telemetry)"
     unplug_elapsed=0
     enable_wifi
   elif [ "$LAST_SUSPEND_RC" -eq 0 ] && [ "$slept_secs" -ge 2 ] && [ "$slept_secs" -lt $((sleep_duration - 15)) ]; then
-    log "Woke up early via Power button press (after ${slept_secs}s / ${sleep_duration}s); refreshing weather and staying awake 5 min for SSH"
+    log "Woke up early via Power button press (after ${slept_secs}s / ${sleep_duration}s); refreshing weather and staying awake 5 min for SSH | $(battery_telemetry)"
     last_updated_hour=""
     unplug_elapsed=0
     enable_wifi
   else
-    log "Woke up from RTC alarm at :00 (after ${slept_secs}s) for hourly update"
+    log "Woke up from RTC alarm at :00 (after ${slept_secs}s) for hourly update | $(battery_telemetry)"
     # Force an update on this RTC wakeup and go right back to sleep afterward
     last_updated_hour=""
     unplug_elapsed="$UNPLUG_GRACE_SECONDS"
