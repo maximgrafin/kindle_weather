@@ -8,7 +8,7 @@
           "name": "Start Weather Loop",
           "priority": 1,
           "action": "/bin/sh",
-          "params": "-c 'nohup /mnt/us/weather/weather_loop.sh >/dev/null 2>&1 &'",
+          "params": "-c '(sleep 1; exec /mnt/us/weather/weather_loop.sh) </dev/null >/dev/null 2>&1 &'",
           "exitmenu": true
         },
         {

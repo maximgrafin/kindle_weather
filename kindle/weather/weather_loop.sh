@@ -41,8 +41,9 @@ turn_off_frontlight() {
 }
 
 is_charging() {
-  # 1. Check sysfs USB/charger online flags (works even when powerd is stopped)
+  # 1. Check max77696-charger and generic USB/charger sysfs online flags (works when powerd is stopped)
   for online in \
+    /sys/class/power_supply/max77696-charger/online \
     /sys/class/power_supply/*usb*/online \
     /sys/class/power_supply/*charger*/online \
     /sys/class/power_supply/*ac*/online \
@@ -57,7 +58,10 @@ is_charging() {
   done
 
   # 2. Check battery status string (Charging while plugged in)
-  for status_file in /sys/class/power_supply/*battery*/status /sys/class/power_supply/*/status; do
+  for status_file in \
+    /sys/class/power_supply/max77696-battery/status \
+    /sys/class/power_supply/*battery*/status
+  do
     if [ -r "$status_file" ]; then
       st=$(cat "$status_file" 2>/dev/null)
       case "$st" in
@@ -121,12 +125,7 @@ rtc_deep_sleep() {
   # Sync filesystems before suspend
   sync
 
-  if command -v rtcwake >/dev/null 2>&1; then
-    rtcwake -d /dev/rtc0 -m mem -s "$sleep_secs" >> "$LOG_FILE" 2>&1 && return 0
-    rtcwake -m mem -s "$sleep_secs" >> "$LOG_FILE" 2>&1 && return 0
-  fi
-
-  # Direct sysfs RTC wakealarm fallback
+  # Arm both max77696 RTC alarm channels (rtc0 and rtc1) so wakeup fires reliably
   for rtc in /sys/class/rtc/rtc0 /sys/class/rtc/rtc1; do
     if [ -w "${rtc}/wakealarm" ]; then
       echo 0 > "${rtc}/wakealarm" 2>/dev/null || true
@@ -138,6 +137,10 @@ rtc_deep_sleep() {
       fi
     fi
   done
+
+  if command -v rtcwake >/dev/null 2>&1; then
+    rtcwake -d /dev/rtc0 -m mem -s "$sleep_secs" >> "$LOG_FILE" 2>&1 && return 0
+  fi
 
   echo mem > /sys/power/state 2>/dev/null || sleep "$sleep_secs"
 }
@@ -171,15 +174,18 @@ if [ -f "$PID_FILE" ]; then
   fi
 fi
 echo "$$" > "$PID_FILE"
-trap 'rm -f "$PID_FILE"; exit 0' INT TERM EXIT
+trap '' HUP
+trap '' TERM
 
 log "Starting Kindle Weather Loop (PID $$)"
 
-# 1. Turn off frontlight & stop native UI/powerd so lockscreen never overwrites eips
+# 1. Turn off frontlight & stop native UI/powerd so lockscreen never overwrites screen
 turn_off_frontlight
 stop framework 2>/dev/null || /etc/init.d/framework stop 2>/dev/null || true
 stop powerd 2>/dev/null || /etc/init.d/powerd stop 2>/dev/null || true
 turn_off_frontlight
+
+trap 'rm -f "$PID_FILE"; exit 0' INT TERM EXIT
 
 last_updated_hour=""
 unplug_elapsed=0
@@ -224,17 +230,25 @@ while true; do
   sleep 2
 
   sleep_duration=$(seconds_until_next_hour)
+  before_sleep_ts=$(date +%s)
   rtc_deep_sleep "$sleep_duration"
+  after_sleep_ts=$(date +%s)
+  slept_secs=$((after_sleep_ts - before_sleep_ts))
 
-  # Kernel just woke up (either from RTC at :00, or early because USB cable was plugged in!)
+  # Kernel just woke up (from RTC at :00, USB charger attach, or Power button press)
   turn_off_frontlight
   if is_charging; then
-    log "Woke up because charger was connected; enabling Wi-Fi and staying awake"
+    log "Woke up because charger was connected (after ${slept_secs}s); enabling Wi-Fi and staying awake"
+    unplug_elapsed=0
+    enable_wifi
+  elif [ "$slept_secs" -lt $((sleep_duration - 15)) ]; then
+    log "Woke up early via Power button press (after ${slept_secs}s / ${sleep_duration}s); refreshing weather and staying awake 5 min for SSH"
+    last_updated_hour=""
     unplug_elapsed=0
     enable_wifi
   else
-    log "Woke up from RTC alarm for hourly update"
-    # Force an update on this RTC wakeup and skip the 5-minute grace window afterward
+    log "Woke up from RTC alarm at :00 (after ${slept_secs}s) for hourly update"
+    # Force an update on this RTC wakeup and go right back to sleep afterward
     last_updated_hour=""
     unplug_elapsed="$UNPLUG_GRACE_SECONDS"
   fi
