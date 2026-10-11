@@ -1,139 +1,153 @@
 #!/bin/sh
 # /mnt/us/weather/test_apis.sh
-# Diagnostic script to verify every hardware/system API used by
-# show_weather.sh and weather_loop.sh on this specific Kindle model.
+# Deep-Sleep & Power Drain Diagnostic for Kindle (max77696)
 #
 # Usage:
-#   sh /mnt/us/weather/test_apis.sh              # Safe read/display/network checks
-#   sh /mnt/us/weather/test_apis.sh --test-sleep # Also tests a 10-second RTC deep sleep & wakeup
+#   sh /mnt/us/weather/test_apis.sh              # Inspect logs, current draw (mA), wakelocks, and RTC
+#   sh /mnt/us/weather/test_apis.sh --test-sleep # Run a real 15s deep-sleep test (with Wi-Fi off) and log dmesg
 
-echo "=========================================="
-echo " Kindle Weather Hardware API Self-Test"
-echo "=========================================="
+REPORT="/mnt/us/weather/sleep_test.log"
+mkdir -p /mnt/us/weather
 
-# 1. Frontlight API
-echo ""
-echo "[1/7] Checking Frontlight (Backlight) API..."
-fl_found=0
-if command -v lipc-get-prop >/dev/null 2>&1; then
-  cur_fl=$(lipc-get-prop com.lab126.powerd flIntensity 2>/dev/null)
-  if [ -n "$cur_fl" ]; then
-    echo "  PASS: lipc powerd flIntensity = $cur_fl"
-    fl_found=1
-  fi
-fi
-for bl in \
-  /sys/class/backlight/*/brightness \
-  /sys/devices/platform/imx-i2c.0/i2c-0/0-003c/max77696-bl.0/backlight/max77696-bl/brightness \
-  /sys/devices/system/fl_tps6116x/fl_tps6116x0/fl_intensity
-do
-  if [ -e "$bl" ]; then
-    echo "  PASS: sysfs backlight node found: $bl (current=$(cat "$bl" 2>/dev/null), writable=$( [ -w "$bl" ] && echo yes || echo no ))"
-    fl_found=1
-  fi
-done
-[ "$fl_found" -eq 0 ] && echo "  WARN: No frontlight sysfs node matched; check: ls -l /sys/class/backlight/"
+run_diagnostics() {
+  echo "=========================================="
+  echo " Kindle Deep-Sleep & Battery Diagnostic"
+  echo " Time: $(date '+%Y-%m-%d %H:%M:%S')"
+  echo "=========================================="
 
-# 2. Battery Percentage API
-echo ""
-echo "[2/7] Checking Battery Level API..."
-if command -v gasgauge-info >/dev/null 2>&1; then
-  echo "  gasgauge-info -c => $(gasgauge-info -c 2>/dev/null)"
-fi
-for cap in \
-  /sys/class/power_supply/*battery*/capacity \
-  /sys/class/power_supply/*/capacity \
-  /sys/devices/system/yoshi_battery/yoshi_battery0/battery_capacity
-do
-  if [ -r "$cap" ]; then
-    echo "  PASS: sysfs capacity ($cap) => $(cat "$cap" 2>/dev/null)%"
-  fi
-done
-if command -v lipc-get-prop >/dev/null 2>&1; then
-  echo "  lipc powerd battLevel => $(lipc-get-prop com.lab126.powerd battLevel 2>/dev/null)"
-fi
-
-# 3. Charger / USB Plugged-in Detection API
-echo ""
-echo "[3/7] Checking Charger / USB Detection API..."
-for p in /sys/class/power_supply/*; do
-  [ -d "$p" ] || continue
-  name=$(basename "$p")
-  online=$( [ -r "$p/online" ] && tr -d '\n' < "$p/online" || echo "n/a" )
-  status=$( [ -r "$p/status" ] && tr -d '\n' < "$p/status" || echo "n/a" )
-  type=$( [ -r "$p/type" ] && tr -d '\n' < "$p/type" || echo "n/a" )
-  echo "  power_supply/$name: type=$type online=$online status=$status"
-done
-if command -v lipc-get-prop >/dev/null 2>&1; then
-  echo "  lipc powerd isCharging => $(lipc-get-prop com.lab126.powerd isCharging 2>/dev/null)"
-fi
-
-# 4. Wi-Fi & HTTPS Download API
-echo ""
-echo "[4/7] Checking Wi-Fi & HTTPS Download Tools..."
-for tool in lipc-set-prop ifconfig wpa_cli ping curl wget; do
-  if command -v "$tool" >/dev/null 2>&1; then
-    echo "  PASS: $tool found at $(command -v "$tool")"
-  else
-    echo "  INFO: $tool not found"
-  fi
-done
-if ping -c 1 -W 3 1.1.1.1 >/dev/null 2>&1; then
-  echo "  PASS: Internet ping (1.1.1.1) succeeded"
-else
-  echo "  WARN: Internet ping (1.1.1.1) failed"
-fi
-
-# 5. E-Ink Display (eips) API
-echo ""
-echo "[5/7] Checking E-Ink Display (eips)..."
-if command -v eips >/dev/null 2>&1; then
-  echo "  PASS: eips found at $(command -v eips)"
-  eips 0 0 "API TEST OK"
-  echo "  PASS: Drew 'API TEST OK' at top-left (0,0) via eips"
-else
-  echo "  FAIL: eips not found!"
-fi
-
-# 6. Service Control (framework / powerd)
-echo ""
-echo "[6/7] Checking Init / Upstart Service Control..."
-if command -v initctl >/dev/null 2>&1; then
-  echo "  PASS: Upstart initctl found:"
-  initctl status framework 2>/dev/null | sed 's/^/    /'
-  initctl status powerd 2>/dev/null | sed 's/^/    /'
-elif [ -x /etc/init.d/framework ]; then
-  echo "  PASS: SysV /etc/init.d/framework & /etc/init.d/powerd found"
-else
-  echo "  WARN: Neither initctl nor /etc/init.d/framework found"
-fi
-
-# 7. RTC Wakealarm & Deep Sleep API
-echo ""
-echo "[7/7] Checking RTC Wakealarm & Kernel Suspend..."
-if command -v rtcwake >/dev/null 2>&1; then
-  echo "  PASS: rtcwake binary found at $(command -v rtcwake)"
-else
-  echo "  INFO: rtcwake binary not present (will use sysfs /sys/class/rtc/rtc*/wakealarm)"
-fi
-for rtc in /sys/class/rtc/rtc*; do
-  [ -d "$rtc" ] || continue
-  echo "  PASS: RTC device $rtc: since_epoch=$(cat "$rtc/since_epoch" 2>/dev/null), wakealarm writable=$( [ -w "$rtc/wakealarm" ] && echo yes || echo no )"
-done
-echo "  /sys/power/state supported modes: $(cat /sys/power/state 2>/dev/null)"
-
-if [ "${1:-}" = "--test-sleep" ]; then
   echo ""
-  echo ">>> Testing 15-second RTC wakealarm (without suspending CPU if on USB, or full mem sleep)..."
-  echo "    Setting wakealarm for +15 seconds..."
-  echo 0 > /sys/class/rtc/rtc0/wakealarm 2>/dev/null || true
-  now_rtc=$(cat /sys/class/rtc/rtc0/since_epoch 2>/dev/null)
-  echo $((now_rtc + 15)) > /sys/class/rtc/rtc0/wakealarm 2>/dev/null || echo "+15" > /sys/class/rtc/rtc0/wakealarm
-  echo "    Verify programmed wakealarm: $(cat /sys/class/rtc/rtc0/wakealarm 2>/dev/null) (target=$((now_rtc + 15)))"
-  echo 0 > /sys/class/rtc/rtc0/wakealarm 2>/dev/null || true
-fi
+  echo "=== 1. Recent /mnt/us/weather/weather.log (last 30 lines) ==="
+  if [ -f /mnt/us/weather/weather.log ]; then
+    tail -n 30 /mnt/us/weather/weather.log
+  else
+    echo "  (no weather.log found)"
+  fi
 
-echo ""
-echo "=========================================="
-echo " Self-Test Complete"
-echo "=========================================="
+  echo ""
+  echo "=== 2. Battery Current Draw & Fuel Gauge ==="
+  if command -v gasgauge-info >/dev/null 2>&1; then
+    echo "  gasgauge-info -c (capacity): $(gasgauge-info -c 2>/dev/null)"
+    echo "  gasgauge-info -l (current):  $(gasgauge-info -l 2>/dev/null)"
+    echo "  gasgauge-info -v (voltage):  $(gasgauge-info -v 2>/dev/null)"
+  fi
+  for f in /sys/class/power_supply/max77696-battery/*; do
+    [ -f "$f" ] || continue
+    bname=$(basename "$f")
+    echo "  max77696-battery/$bname = $(cat "$f" 2>/dev/null)"
+  done
+  for f in /sys/class/power_supply/max77696-charger/*; do
+    [ -f "$f" ] || continue
+    cname=$(basename "$f")
+    echo "  max77696-charger/$cname = $(cat "$f" 2>/dev/null)"
+  done
+
+  echo ""
+  echo "=== 3. Running Processes & Services ==="
+  initctl status framework 2>/dev/null || true
+  initctl status powerd 2>/dev/null || true
+  initctl status wifid 2>/dev/null || true
+  initctl status cmd 2>/dev/null || true
+  ps aux 2>/dev/null | grep -E "weather|rtcwake|sleep" | grep -v grep || ps | grep -E "weather|rtcwake|sleep" | grep -v grep || true
+
+  echo ""
+  echo "=== 4. Kernel Power & Wakelock State ==="
+  for pf in /sys/power/*; do
+    [ -f "$pf" ] || continue
+    echo "  $pf: $(cat "$pf" 2>/dev/null | tr '\n' ' ')"
+  done
+  if [ -r /proc/wakelocks ]; then
+    echo "  Active /proc/wakelocks:"
+    awk '$6 > 0 {print "   ", $1, "active_since="$6}' /proc/wakelocks 2>/dev/null | head -n 20
+  fi
+
+  echo ""
+  echo "=== 5. RTC Devices & Wakeup Capabilities ==="
+  for rtc in /sys/class/rtc/rtc*; do
+    [ -d "$rtc" ] || continue
+    rname=$(basename "$rtc")
+    name_val=$(cat "$rtc/name" 2>/dev/null)
+    epoch_val=$(cat "$rtc/since_epoch" 2>/dev/null)
+    alarm_val=$(cat "$rtc/wakealarm" 2>/dev/null)
+    dev_wakeup=$(cat "$rtc/device/power/wakeup" 2>/dev/null)
+    echo "  $rname ($name_val): since_epoch=$epoch_val wakealarm='$alarm_val' device/power/wakeup='$dev_wakeup'"
+  done
+
+  if [ "${1:-}" = "--test-sleep" ]; then
+    echo ""
+    echo "=== 6. Running 15-Second REAL Deep-Sleep Test (mem) ==="
+    echo "  (Turning off Wi-Fi for ~17s, suspending to RAM, then reconnecting Wi-Fi...)"
+    TMP_SLEEP_LOG="/mnt/us/weather/sleep_step.tmp"
+    : > "$TMP_SLEEP_LOG"
+
+    # Clear RTC wakealarms first
+    for rtc in /sys/class/rtc/rtc0 /sys/class/rtc/rtc1; do
+      if [ -w "${rtc}/wakealarm" ]; then
+        echo 0 > "${rtc}/wakealarm" 2>/dev/null || true
+      fi
+    done
+
+    # Set +15s alarm on both rtc0 and rtc1
+    for rtc in /sys/class/rtc/rtc0 /sys/class/rtc/rtc1; do
+      if [ -w "${rtc}/wakealarm" ]; then
+        now_rtc=$(cat "${rtc}/since_epoch" 2>/dev/null)
+        echo $((now_rtc + 15)) > "${rtc}/wakealarm" 2>&1 || echo "+15" > "${rtc}/wakealarm" 2>&1
+        echo "  Armed $rtc/wakealarm => $(cat "${rtc}/wakealarm" 2>/dev/null) (target=$((now_rtc + 15)))" >> "$TMP_SLEEP_LOG"
+      fi
+    done
+
+    lipc-set-prop com.lab126.cmd wirelessEnable 0 2>/dev/null || true
+    ifconfig wlan0 down 2>/dev/null || true
+    sleep 4
+
+    t_before=$(date +%s)
+    rtc_before=$(cat /sys/class/rtc/rtc0/since_epoch 2>/dev/null)
+    echo "  Suspending via: echo mem > /sys/power/state (epoch=$t_before, rtc=$rtc_before)" >> "$TMP_SLEEP_LOG"
+    sync
+
+    # Write directly to /sys/power/state and capture any stderr error!
+    if echo mem > /sys/power/state 2>> "$TMP_SLEEP_LOG"; then
+      suspend_rc=0
+    else
+      suspend_rc=$?
+    fi
+
+    t_after=$(date +%s)
+    rtc_after=$(cat /sys/class/rtc/rtc0/since_epoch 2>/dev/null)
+    wall_diff=$((t_after - t_before))
+    rtc_diff=$((rtc_after - rtc_before))
+
+    echo "  Resumed! exit_code=$suspend_rc, wall_diff=${wall_diff}s, rtc_diff=${rtc_diff}s" >> "$TMP_SLEEP_LOG"
+
+    # Clear wakealarms
+    echo 0 > /sys/class/rtc/rtc0/wakealarm 2>/dev/null || true
+    echo 0 > /sys/class/rtc/rtc1/wakealarm 2>/dev/null || true
+
+    echo "" >> "$TMP_SLEEP_LOG"
+    echo "=== 7. Kernel dmesg around suspend/resume ===" >> "$TMP_SLEEP_LOG"
+    dmesg | tail -n 35 >> "$TMP_SLEEP_LOG"
+
+    # Re-enable Wi-Fi and wait up to 20s for connection so SSH receives the output cleanly
+    ifconfig wlan0 up 2>/dev/null || true
+    lipc-set-prop com.lab126.cmd wirelessEnable 1 2>/dev/null || true
+    wpa_cli -i wlan0 reconnect >/dev/null 2>&1 || true
+
+    w=0
+    while [ "$w" -lt 20 ]; do
+      if ping -c 1 -W 1 1.1.1.1 >/dev/null 2>&1 || ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1; then
+        break
+      fi
+      sleep 1
+      w=$((w + 1))
+    done
+
+    cat "$TMP_SLEEP_LOG"
+    rm -f "$TMP_SLEEP_LOG"
+  fi
+
+  echo ""
+  echo "=========================================="
+  echo " Diagnostic Complete (saved to $REPORT)"
+  echo "=========================================="
+}
+
+run_diagnostics "${1:-}" 2>&1 | tee "$REPORT"

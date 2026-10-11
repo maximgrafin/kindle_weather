@@ -41,23 +41,21 @@ turn_off_frontlight() {
 }
 
 is_charging() {
-  # 1. Check max77696-charger and generic USB/charger sysfs online flags (works when powerd is stopped)
-  for online in \
-    /sys/class/power_supply/max77696-charger/online \
-    /sys/class/power_supply/*usb*/online \
-    /sys/class/power_supply/*charger*/online \
-    /sys/class/power_supply/*ac*/online \
-    /sys/devices/system/yoshi_battery/yoshi_battery0/battery_CAR
-  do
-    if [ -r "$online" ]; then
-      val=$(tr -dc '0-9' < "$online" 2>/dev/null)
-      if [ "$val" = "1" ]; then
-        return 0
-      fi
+  # 1. Check max77696-charger/present:
+  #    On Kindle max77696 PMIC, 'present' is 1 when USB power is plugged in and 0 when unplugged
+  #    (whereas 'online' is always 1).
+  if [ -r /sys/class/power_supply/max77696-charger/present ]; then
+    present_val=$(tr -dc '0-9' < /sys/class/power_supply/max77696-charger/present 2>/dev/null)
+    if [ "$present_val" = "1" ]; then
+      return 0
+    elif [ "$present_val" = "0" ]; then
+      return 1
     fi
-  done
+  fi
 
-  # 2. Check battery status string (Charging while plugged in)
+  # 2. Check max77696 / Linux power_supply battery status:
+  #    - "Discharging" => on battery (unplugged)
+  #    - "Charging" or "Full" => USB power connected
   for status_file in \
     /sys/class/power_supply/max77696-battery/status \
     /sys/class/power_supply/*battery*/status
@@ -65,7 +63,17 @@ is_charging() {
     if [ -r "$status_file" ]; then
       st=$(cat "$status_file" 2>/dev/null)
       case "$st" in
+        Discharging*)
+          return 1
+          ;;
         Charging*)
+          return 0
+          ;;
+        Full*|Not\ charging*)
+          cur=$(cat /sys/class/power_supply/max77696-battery/current_now 2>/dev/null | tr -dc '0-9-')
+          if [ -n "$cur" ] && [ "$cur" -lt -15 ]; then
+            return 1
+          fi
           return 0
           ;;
       esac
@@ -83,13 +91,14 @@ is_charging() {
 }
 
 enable_wifi() {
-  lipc-set-prop com.lab126.cmd wirelessEnable 1 2>/dev/null || true
   ifconfig wlan0 up 2>/dev/null || true
+  lipc-set-prop com.lab126.cmd wirelessEnable 1 2>/dev/null || true
   wpa_cli -i wlan0 reconnect >/dev/null 2>&1 || true
 }
 
 disable_wifi() {
   lipc-set-prop com.lab126.cmd wirelessEnable 0 2>/dev/null || true
+  ifconfig wlan0 down 2>/dev/null || true
 }
 
 wait_for_wifi() {
@@ -118,6 +127,9 @@ seconds_until_next_hour() {
   echo "$rem"
 }
 
+# Global set by rtc_deep_sleep: 0 if kernel suspend succeeded, non-zero otherwise
+LAST_SUSPEND_RC=0
+
 rtc_deep_sleep() {
   sleep_secs="$1"
   log "Entering deep sleep for ${sleep_secs}s (until next :00)"
@@ -125,35 +137,65 @@ rtc_deep_sleep() {
   # Sync filesystems before suspend
   sync
 
-  # Arm both max77696 RTC alarm channels (rtc0 and rtc1) so wakeup fires reliably
-  for rtc in /sys/class/rtc/rtc0 /sys/class/rtc/rtc1; do
-    if [ -w "${rtc}/wakealarm" ]; then
-      echo 0 > "${rtc}/wakealarm" 2>/dev/null || true
-      if [ -r "${rtc}/since_epoch" ]; then
-        now_rtc=$(cat "${rtc}/since_epoch" 2>/dev/null)
-        echo $((now_rtc + sleep_secs)) > "${rtc}/wakealarm" 2>/dev/null || echo "+${sleep_secs}" > "${rtc}/wakealarm" 2>/dev/null
-      else
-        echo "+${sleep_secs}" > "${rtc}/wakealarm" 2>/dev/null
+  attempt=1
+  while [ "$attempt" -le 3 ]; do
+    # Clear and arm both max77696 RTC alarm channels (rtc0 and rtc1)
+    for rtc in /sys/class/rtc/rtc0 /sys/class/rtc/rtc1; do
+      if [ -w "${rtc}/wakealarm" ]; then
+        echo 0 > "${rtc}/wakealarm" 2>/dev/null || true
+        if [ -r "${rtc}/since_epoch" ]; then
+          now_rtc=$(cat "${rtc}/since_epoch" 2>/dev/null)
+          echo $((now_rtc + sleep_secs)) > "${rtc}/wakealarm" 2>/dev/null || echo "+${sleep_secs}" > "${rtc}/wakealarm" 2>/dev/null
+        else
+          echo "+${sleep_secs}" > "${rtc}/wakealarm" 2>/dev/null
+        fi
       fi
+    done
+
+    t0=$(cat /sys/class/rtc/rtc0/since_epoch 2>/dev/null || date +%s)
+    if echo mem > /sys/power/state 2>>"$LOG_FILE"; then
+      LAST_SUSPEND_RC=0
+    else
+      LAST_SUSPEND_RC=$?
     fi
+    t1=$(cat /sys/class/rtc/rtc0/since_epoch 2>/dev/null || date +%s)
+    elapsed_sleep=$((t1 - t0))
+
+    # Clear wakealarms after waking
+    echo 0 > /sys/class/rtc/rtc0/wakealarm 2>/dev/null || true
+    echo 0 > /sys/class/rtc/rtc1/wakealarm 2>/dev/null || true
+
+    if [ "$LAST_SUSPEND_RC" -eq 0 ] && [ "$elapsed_sleep" -ge 2 ]; then
+      return 0
+    fi
+
+    log "WARN: Suspend attempt ${attempt}/3 returned rc=${LAST_SUSPEND_RC} after ${elapsed_sleep}s; retrying in 3s..."
+    disable_wifi
+    sleep 3
+    attempt=$((attempt + 1))
   done
 
-  if command -v rtcwake >/dev/null 2>&1; then
-    rtcwake -d /dev/rtc0 -m mem -s "$sleep_secs" >> "$LOG_FILE" 2>&1 && return 0
-  fi
+  log "ERROR: Kernel suspend failed after 3 attempts; falling back to sleep 60s before retrying"
+  sleep 60
+  return 1
+}
 
-  echo mem > /sys/power/state 2>/dev/null || sleep "$sleep_secs"
+kill_existing_loop() {
+  if [ -f "$PID_FILE" ]; then
+    old_pid=$(cat "$PID_FILE" 2>/dev/null)
+    rm -f "$PID_FILE"
+    if [ -n "$old_pid" ] && [ "$old_pid" != "$$" ] && kill -0 "$old_pid" 2>/dev/null; then
+      log "Stopping previous weather_loop instance (PID $old_pid)"
+      pkill -P "$old_pid" 2>/dev/null || true
+      kill -9 "$old_pid" 2>/dev/null || true
+      sleep 1
+    fi
+  fi
 }
 
 stop_loop_and_restore_ui() {
   log "Stopping weather_loop and restoring Kindle UI..."
-  if [ -f "$PID_FILE" ]; then
-    old_pid=$(cat "$PID_FILE" 2>/dev/null)
-    rm -f "$PID_FILE"
-    if [ -n "$old_pid" ] && [ "$old_pid" != "$$" ]; then
-      kill "$old_pid" 2>/dev/null || true
-    fi
-  fi
+  kill_existing_loop
   enable_wifi
   start powerd 2>/dev/null || /etc/init.d/powerd start 2>/dev/null || true
   start framework 2>/dev/null || /etc/init.d/framework start 2>/dev/null || true
@@ -165,17 +207,10 @@ if [ "${1:-}" = "--stop" ]; then
 fi
 
 # Prevent duplicate loop instances
-if [ -f "$PID_FILE" ]; then
-  old_pid=$(cat "$PID_FILE" 2>/dev/null)
-  if [ -n "$old_pid" ] && kill -0 "$old_pid" 2>/dev/null; then
-    log "Killing previous weather_loop instance (PID $old_pid)"
-    kill "$old_pid" 2>/dev/null || true
-    sleep 1
-  fi
-fi
+kill_existing_loop
 echo "$$" > "$PID_FILE"
 trap '' HUP
-trap '' TERM
+trap 'rm -f "$PID_FILE"; exit 0' INT TERM EXIT
 
 log "Starting Kindle Weather Loop (PID $$)"
 
@@ -184,8 +219,6 @@ turn_off_frontlight
 stop framework 2>/dev/null || /etc/init.d/framework stop 2>/dev/null || true
 stop powerd 2>/dev/null || /etc/init.d/powerd stop 2>/dev/null || true
 turn_off_frontlight
-
-trap 'rm -f "$PID_FILE"; exit 0' INT TERM EXIT
 
 last_updated_hour=""
 unplug_elapsed=0
@@ -227,12 +260,12 @@ while true; do
   # 5-minute grace window has elapsed and charger is still detached:
   # Turn off Wi-Fi and deep-sleep until the top of the next hour (:00)
   disable_wifi
-  sleep 2
+  sleep 4
 
   sleep_duration=$(seconds_until_next_hour)
-  before_sleep_ts=$(date +%s)
+  before_sleep_ts=$(cat /sys/class/rtc/rtc0/since_epoch 2>/dev/null || date +%s)
   rtc_deep_sleep "$sleep_duration"
-  after_sleep_ts=$(date +%s)
+  after_sleep_ts=$(cat /sys/class/rtc/rtc0/since_epoch 2>/dev/null || date +%s)
   slept_secs=$((after_sleep_ts - before_sleep_ts))
 
   # Kernel just woke up (from RTC at :00, USB charger attach, or Power button press)
@@ -241,7 +274,7 @@ while true; do
     log "Woke up because charger was connected (after ${slept_secs}s); enabling Wi-Fi and staying awake"
     unplug_elapsed=0
     enable_wifi
-  elif [ "$slept_secs" -lt $((sleep_duration - 15)) ]; then
+  elif [ "$LAST_SUSPEND_RC" -eq 0 ] && [ "$slept_secs" -ge 2 ] && [ "$slept_secs" -lt $((sleep_duration - 15)) ]; then
     log "Woke up early via Power button press (after ${slept_secs}s / ${sleep_duration}s); refreshing weather and staying awake 5 min for SSH"
     last_updated_hour=""
     unplug_elapsed=0
