@@ -172,12 +172,12 @@
     .hero-temp-row {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
     }
 
     .hero-icon-wrap {
-      width: 118px;
-      height: 118px;
+      width: 114px;
+      height: 114px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -185,17 +185,49 @@
     }
 
     .hero-icon-wrap svg {
-      width: 118px;
-      height: 118px;
+      width: 114px;
+      height: 114px;
       display: block;
     }
 
+    .hero-temp-group {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+    }
+
     .hero-temp {
-      font-size: 94px;
+      font-size: 90px;
       font-weight: 800;
       letter-spacing: -0.045em;
       line-height: 0.92;
       color: var(--ink-black);
+    }
+
+    .hero-feels {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--ink-muted);
+      white-space: nowrap;
+    }
+
+    .hero-temp-group-md .hero-temp {
+      font-size: 76px;
+    }
+
+    .hero-temp-group-md .hero-feels {
+      font-size: 33px;
+    }
+
+    .hero-temp-group-sm .hero-temp {
+      font-size: 64px;
+    }
+
+    .hero-temp-group-sm .hero-feels {
+      font-size: 28px;
     }
 
     .hero-status-block {
@@ -216,10 +248,16 @@
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 8px;
-      font-size: 16.5px;
+      gap: 10px;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      color: var(--ink-black);
+    }
+
+    .hilow-sep {
+      color: var(--ink-muted);
       font-weight: 700;
-      color: var(--ink-dark);
     }
 
     /* Hero Bottom Metrics */
@@ -595,15 +633,16 @@
         <div class="hero-main">
           <div class="hero-temp-row">
             <div id="hero-icon" class="hero-icon-wrap" aria-hidden="true"></div>
-            <div id="hero-temp" class="hero-temp">--°</div>
+            <div id="hero-temp-group" class="hero-temp-group">
+              <span id="hero-temp" class="hero-temp">--°</span>
+              <span id="hero-feels" class="hero-feels">(--°)</span>
+            </div>
           </div>
           <div class="hero-status-block">
             <div id="hero-condition" class="hero-condition">Loading...</div>
             <div class="hero-hilow">
-              <span id="hero-feels">Feels like --°</span>
-              <span>·</span>
               <span id="hero-high">H: --°</span>
-              <span>·</span>
+              <span class="hilow-sep">·</span>
               <span id="hero-low">L: --°</span>
             </div>
           </div>
@@ -1252,9 +1291,9 @@
       const xAxisLeft = xStart - 9;
       const xAxisRight = xOf(points.length - 1) + 9;
 
-      // Temperature track: y in [66 .. 140]
-      const yTempTop = 66;
-      const yTempBot = 140;
+      // Temperature track: y in [70 .. 144]
+      const yTempTop = 70;
+      const yTempBot = 144;
       const temps = points.map((p) => p.temp);
       const minT = Math.min(...temps);
       const maxT = Math.max(...temps);
@@ -1313,10 +1352,10 @@
           const y = yOfTemp(p.temp);
           const fill = p.k === 0 ? '#000000' : '#ffffff';
           parts.push(
-            `<circle cx="${x}" cy="${y}" r="4.2" fill="${fill}" stroke="#000000" stroke-width="2.4" />`
+            `<circle cx="${x}" cy="${y}" r="4.6" fill="${fill}" stroke="#000000" stroke-width="2.5" />`
           );
           parts.push(
-            `<text x="${x}" y="${y - 10}" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="800" fill="#000000">${Math.round(p.temp)}°</text>`
+            `<text x="${x}" y="${y - 11}" text-anchor="middle" font-family="Inter, sans-serif" font-size="17.5" font-weight="800" fill="#000000">${Math.round(p.temp)}°</text>`
           );
         }
       }
@@ -1569,14 +1608,19 @@
         const todayBadges = renderDayBadges(todaySpecial, true);
         document.getElementById('today-badges').innerHTML = todayBadges.join('');
 
-        document.getElementById('hero-icon').innerHTML = renderWeatherSvg(currentInfo.icon);
-        document.getElementById('hero-temp').textContent = `${Math.round(current.temperature_2m)}°`;
-        document.getElementById('hero-condition').textContent = currentInfo.label;
-
+        const currentTemp = Math.round(current.temperature_2m);
         const feelsLike = Math.round(current.apparent_temperature ?? current.temperature_2m);
         const todayMax = Math.round(data.daily.temperature_2m_max[0]);
         const todayMin = Math.round(data.daily.temperature_2m_min[0]);
-        document.getElementById('hero-feels').textContent = `Feels like ${feelsLike}°`;
+
+        document.getElementById('hero-icon').innerHTML = renderWeatherSvg(currentInfo.icon);
+        document.getElementById('hero-temp').textContent = `${currentTemp}°`;
+        document.getElementById('hero-feels').textContent = `(${feelsLike}°)`;
+        const tempChars = `${currentTemp}${feelsLike}`.length;
+        const tempGroupEl = document.getElementById('hero-temp-group');
+        tempGroupEl.classList.toggle('hero-temp-group-md', tempChars === 4);
+        tempGroupEl.classList.toggle('hero-temp-group-sm', tempChars >= 5);
+        document.getElementById('hero-condition').textContent = currentInfo.label;
         document.getElementById('hero-high').textContent = `H: ${todayMax}°`;
         document.getElementById('hero-low').textContent = `L: ${todayMin}°`;
 
