@@ -164,7 +164,7 @@
     .hero-main {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 18px;
       margin: auto 0;
       padding-bottom: 6px;
     }
@@ -193,7 +193,7 @@
     .hero-temp-group {
       display: flex;
       align-items: baseline;
-      gap: 6px;
+      gap: 8px;
       min-width: 0;
     }
 
@@ -212,6 +212,8 @@
       line-height: 1;
       color: var(--ink-muted);
       white-space: nowrap;
+      position: relative;
+      top: -6px;
     }
 
     .hero-temp-group-md .hero-temp {
@@ -220,6 +222,7 @@
 
     .hero-temp-group-md .hero-feels {
       font-size: 33px;
+      top: -5px;
     }
 
     .hero-temp-group-sm .hero-temp {
@@ -228,16 +231,17 @@
 
     .hero-temp-group-sm .hero-feels {
       font-size: 28px;
+      top: -4px;
     }
 
     .hero-status-block {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .hero-condition {
-      font-size: 28px;
+      font-size: 30px;
       font-weight: 800;
       letter-spacing: -0.02em;
       line-height: 1.15;
@@ -246,13 +250,20 @@
 
     .hero-hilow {
       display: flex;
-      align-items: center;
+      align-items: baseline;
       flex-wrap: wrap;
-      gap: 10px;
-      font-size: 24px;
+      gap: 12px;
+      font-size: 25px;
       font-weight: 800;
       letter-spacing: -0.015em;
       color: var(--ink-black);
+    }
+
+    .hilow-label {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      margin-right: 3px;
     }
 
     .hilow-sep {
@@ -484,16 +495,16 @@
     }
 
     .daily-day {
-      font-size: 19px;
+      font-size: 20px;
       font-weight: 800;
       letter-spacing: -0.02em;
       color: var(--ink-black);
     }
 
     .daily-sub {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--ink-muted);
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #333333;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -562,27 +573,27 @@
       align-items: baseline;
       justify-content: flex-end;
       gap: 4px;
-      height: 24px;
+      height: 26px;
       line-height: 1;
       text-align: right;
     }
 
     .temp-max {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 800;
       letter-spacing: -0.02em;
       color: var(--ink-black);
     }
 
     .temp-sep {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       color: var(--ink-muted);
     }
 
     .temp-min {
-      font-size: 16px;
-      font-weight: 600;
+      font-size: 17.5px;
+      font-weight: 700;
       color: var(--ink-muted);
     }
 
@@ -982,8 +993,7 @@
 
         case 'overcast':
           return `<svg ${common}>
-            <path d="M26 38H49C53.4 38 57 34.4 57 30C57 25.8 53.8 22.4 49.7 22C48.5 16.3 43.4 12 37.3 12C30.3 12 24.6 17.7 24.6 24.7" fill="#cccccc" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M18 49H44C49.5 49 54 44.5 54 39C54 33.8 50 29.6 45 29.1C43.5 21.9 37.1 16.5 29.4 16.5C20.6 16.5 13.5 23.6 13.5 32.4C13.5 32.9 13.5 33.5 13.6 34C9.8 35.1 7 38.5 7 42.6C7 46.8 10.5 49 15 49H18Z" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
+            <path d="${cloudPath}" transform="translate(0, 2.5)" fill="#ffffff" stroke="#000000" stroke-width="3.4" stroke-linejoin="round"/>
           </svg>`;
 
         case 'fog':
@@ -1365,19 +1375,19 @@
         `<line x1="${xAxisLeft}" y1="${yPrecipTop}" x2="${xAxisRight}" y2="${yPrecipTop}" stroke="#777777" stroke-width="1.5" stroke-dasharray="4 4" />`
       );
       parts.push(
-        `<text x="${xAxisLeft - 4}" y="${yPrecipTop + 4}" text-anchor="end" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">100%</text>`
+        `<text x="${xAxisLeft - 4}" y="${yPrecipTop + 4}" text-anchor="end" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#333333">100%</text>`
       );
       parts.push(
-        `<text x="${xAxisRight + 4}" y="${yPrecipTop + 4}" text-anchor="start" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">4mm</text>`
+        `<text x="${xAxisRight + 4}" y="${yPrecipTop + 4}" text-anchor="start" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#333333">4mm</text>`
       );
       parts.push(
         `<line x1="${xAxisLeft}" y1="${yPrecipMid}" x2="${xAxisRight}" y2="${yPrecipMid}" stroke="#777777" stroke-width="1.5" stroke-dasharray="4 4" />`
       );
       parts.push(
-        `<text x="${xAxisLeft - 4}" y="${yPrecipMid + 4}" text-anchor="end" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">50%</text>`
+        `<text x="${xAxisLeft - 4}" y="${yPrecipMid + 4}" text-anchor="end" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#333333">50%</text>`
       );
       parts.push(
-        `<text x="${xAxisRight + 4}" y="${yPrecipMid + 4}" text-anchor="start" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#333333">1mm</text>`
+        `<text x="${xAxisRight + 4}" y="${yPrecipMid + 4}" text-anchor="start" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#333333">1mm</text>`
       );
 
       // 5. Hourly Precipitation Bars (Quantized gray #bbbbbb = Probability %, Solid black = Amount mm on fixed sqrt(mm/4) scale, overflowing if > 4mm)
@@ -1467,7 +1477,7 @@
         );
         if (isMajor) {
           parts.push(
-            `<text x="${x}" y="${yPrecipBase + 22}" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="#000000">${p.hourLabel}</text>`
+            `<text x="${x}" y="${yPrecipBase + 22}" text-anchor="middle" font-family="Inter, sans-serif" font-size="13.5" font-weight="800" fill="#000000">${p.hourLabel}</text>`
           );
         }
       }
@@ -1621,8 +1631,8 @@
         tempGroupEl.classList.toggle('hero-temp-group-md', tempChars === 4);
         tempGroupEl.classList.toggle('hero-temp-group-sm', tempChars >= 5);
         document.getElementById('hero-condition').textContent = currentInfo.label;
-        document.getElementById('hero-high').textContent = `H: ${todayMax}°`;
-        document.getElementById('hero-low').textContent = `L: ${todayMin}°`;
+        document.getElementById('hero-high').innerHTML = `<span class="hilow-label">H:</span>${todayMax}°`;
+        document.getElementById('hero-low').innerHTML = `<span class="hilow-label">L:</span>${todayMin}°`;
 
         // Rain / Snow chance, amount & expected time window (shifts to Tomorrow after 20:00 when tonight is dry)
         const precipToday = analyzeTodayPrecipitation(data.hourly, data.daily, current.time, current.temperature_2m);
